@@ -10,19 +10,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # First-time setup
 uv venv && uv sync && uv run hr-seed      # creates venv, installs deps, seeds ChromaDB
 
-# Start everything (engine + watcher + MCP Inspector)
+# One-command lifecycle — start.ps1/.sh force-kills the four project ports,
+# starts watcher + MCP Inspector + engine, and auto-opens TWO browser tabs
+# (chat at 8090, Inspector at 6374). Press Ctrl+C to stop cleanly.
+.\scripts\start.ps1         # Windows
 ./scripts/start.sh          # Linux/macOS
-.\scripts\start.ps1         # Windows PowerShell (also launches MCP Inspector on ports 5173/6274)
 
-# Start individual services
-uv run hr-engine            # FastAPI on port 8080 (kills port first)
+# Crash-recovery stop — kills anything on the 4 project ports, including
+# orphaned processes from a crashed start script. Safe to run anytime.
+.\scripts\stop.ps1
+./scripts/stop.sh
+
+# Smoke test (one-shot end-to-end pipeline run, ~50s)
+uv run python smoke_test.py # Drops Alice Zhang resume, asserts Strong Match
+
+# Individual services (rarely needed if start.ps1 is used)
+uv run hr-engine            # FastAPI on port 8090 (kills port first)
 uv run hr-watcher           # File watcher for data/incoming/
-uv run hr-mcp               # FastMCP 2 server on port 8081 (kills port first)
+uv run hr-mcp               # FastMCP 2 SSE on port 8091 (kills port first)
+uv run hr-mcp --stdio       # FastMCP 2 stdio transport (for MCP Inspector)
 uv run hr-seed              # Re-seed ChromaDB from sample_knowledge/
 uv run hr-seed --reset      # Clear ChromaDB and re-seed from scratch
 
 # MCP Inspector standalone (requires Node.js; not needed if using start.ps1)
-npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
+SERVER_PORT=5273 CLIENT_PORT=6374 npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
 
 # Tests
 uv run pytest tests/ -v
@@ -32,6 +43,15 @@ uv run pytest --cov=contoso_hr
 uv run ruff check src/ tests/
 uv run ruff format src/ tests/
 ```
+
+**Port map** (chosen to vacate 8080 + 5173 used by another project on this machine):
+
+| Port | Service | Env var |
+|------|---------|---------|
+| 8090 | FastAPI engine (web UI + REST API) | `ENGINE_PORT` |
+| 8091 | FastMCP 2 SSE server (only when running `hr-mcp` directly) | `MCP_PORT` |
+| 5273 | MCP Inspector proxy | `SERVER_PORT` (not `PORT`) |
+| 6374 | MCP Inspector browser UI | `CLIENT_PORT` |
 
 ## Domain Context
 
@@ -138,11 +158,17 @@ All LLM calls use `AzureChatOpenAI` (from `langchain-openai`). CrewAI uses `LLM(
 
 Required env vars: `AZURE_AI_FOUNDRY_ENDPOINT`, `AZURE_AI_FOUNDRY_KEY`, `AZURE_AI_FOUNDRY_CHAT_MODEL`, `AZURE_AI_FOUNDRY_EMBEDDING_MODEL`.
 
-Azure deployment: resource `contoso-hr-ai` in resource group `contoso-hr-rg` (eastus2). Deployed models: `gpt-4-1-mini` (chat) and `text-embedding-3-large` (embeddings). Endpoint: `https://contoso-hr-ai.cognitiveservices.azure.com/`.
+Azure deployment: resource `scribe-foundry-resource` in resource group `scribe-rg` (eastus2). Chat deployment `gpt-5.4-1` (model `gpt-5.4`, version `2026-03-05`); embedding deployment `text-embedding-ada-002-1` (model `text-embedding-ada-002`). Endpoint: `https://scribe-foundry-resource.cognitiveservices.azure.com/`.
 
 ### Port Management
 
-`force_kill_port(port)` in `util/port_utils.py` is called at the top of `engine.py:main()` and `mcp_server/__main__.py:main()`. Scripts also kill ports as belt-and-suspenders. Always uses port 8080 (engine) and 8081 (MCP).
+`force_kill_port(port)` in `util/port_utils.py` is called at the top of `engine.py:main()` and `mcp_server/__main__.py:main()` (SSE branch only — see stdio gotcha below). Start scripts also kill ports as belt-and-suspenders, including the Inspector ports (5273/6374) that `force_kill_port` doesn't touch. `stop.ps1`/`stop.sh` is the crash-recovery hatch for orphaned processes.
+
+### MCP stdio mode — DO NOT write to stdout
+
+`mcp_server/__main__.py` has two branches:
+- **SSE mode** (`uv run hr-mcp`): calls `setup_logging()` + `force_kill_port(8091)` + Rich console banner. All fine — uses stdout freely.
+- **stdio mode** (`uv run hr-mcp --stdio`, used by MCP Inspector): JSON-RPC owns stdout. ANY non-JSON byte on stdout (Rich logs, `print()`, banners) corrupts the protocol and the Inspector throws `SyntaxError: Unexpected number in JSON at position 2`. The stdio branch routes **all logging to stderr** via a separate `Console(stderr=True)`. If you add new logging or `print()` calls anywhere in the import chain reachable from stdio mode, ensure they go to stderr.
 
 ### Chat History Persistence
 
@@ -161,7 +187,7 @@ Chat UI features: "New chat" button (resets UI in-place, new session ID, no relo
 
 ### MCP Server (FastMCP 2)
 
-Supports both SSE (`http://localhost:8081/sse`) and stdio transport (`uv run hr-mcp --stdio`). The `__main__.py` entry point accepts a `--stdio` flag to switch transport mode.
+Supports both SSE (`http://localhost:8091/sse`) and stdio transport (`uv run hr-mcp --stdio`). The `__main__.py` entry point accepts a `--stdio` flag to switch transport mode.
 
 **Resources (static):** `schema://candidate`, `stats://evaluations`, `samples://resumes`, `config://settings`.
 **Resource Templates (dynamic):** `candidate://{candidate_id}`, `policy://{topic}`.

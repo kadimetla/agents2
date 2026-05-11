@@ -25,9 +25,16 @@ Checkpointing via SqliteSaver enables cross-run memory per session_id (thread_id
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from pathlib import Path
+
+# CrewAI verbose=True writes to stdout via its own Rich console. When the
+# MCP server runs in stdio transport, stdout is the JSON-RPC channel — any
+# non-JSON byte corrupts the protocol. mcp_server/__main__.py sets this
+# env var BEFORE importing the pipeline so verbose stays off in stdio mode.
+_VERBOSE = os.getenv("CONTOSO_HR_MCP_STDIO") != "1"
 from typing import Optional, TypedDict
 from uuid import uuid4
 
@@ -133,7 +140,7 @@ def policy_expert_crew_node(state: HRState) -> HRState:
             agents=[agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True,
+            verbose=_VERBOSE,
         )
         result = crew.kickoff()
 
@@ -193,7 +200,7 @@ def resume_analyst_crew_node(state: HRState) -> HRState:
             agents=[agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True,
+            verbose=_VERBOSE,
         )
         result = crew.kickoff()
 
@@ -261,7 +268,7 @@ def decision_maker_crew_node(state: HRState) -> HRState:
             agents=[agent],
             tasks=[task],
             process=Process.sequential,
-            verbose=True,
+            verbose=_VERBOSE,
         )
         result = crew.kickoff()
 

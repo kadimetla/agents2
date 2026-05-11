@@ -22,7 +22,7 @@ def main():
     if args.stdio:
         mcp.run(transport="stdio")           # MCP Inspector
     else:
-        mcp.run(transport="sse", port=8081)  # SSE for web clients
+        mcp.run(transport="sse", port=8091)  # SSE for web clients
 ```
 
 ### Transport Parity Rule

@@ -40,4 +40,4 @@ Write-Host "`n=== Setup Complete ===" -ForegroundColor Green
 Write-Host "Next steps:" -ForegroundColor White
 Write-Host "  1. Edit .env with your Azure AI Foundry credentials"
 Write-Host "  2. Run: .\scripts\start.ps1"
-Write-Host "  3. Open: http://localhost:8080/chat.html"
+Write-Host "  3. Open: http://localhost:8090/chat.html"

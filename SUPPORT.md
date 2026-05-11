@@ -53,7 +53,7 @@ Before asking for help, check these resources:
 - Missing `uv`: Install from <https://docs.astral.sh/uv/getting-started/installation/>
 - Import errors: Run commands with `uv run` to use the managed environment
 - ChromaDB issues: Re-seed with `uv run hr-seed`
-- Port conflicts: The engine (8080) and MCP server (8081) auto-kill conflicting processes on startup
+- Port conflicts: The engine (8090) and MCP server (8091) auto-kill conflicting processes on startup
 
 **Still stuck?** [Open a discussion](https://github.com/timothywarner-org/agents2/discussions)
 

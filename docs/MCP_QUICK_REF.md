@@ -9,19 +9,19 @@
 
 ```bash
 cd contoso-hr-agent
-uv run hr-mcp              # FastMCP 2 SSE on port 8081
+uv run hr-mcp              # FastMCP 2 SSE on port 8091
 ```
 
-The server force-kills port 8081 on startup and listens at `http://localhost:8081/sse`.
+The server force-kills port 8091 on startup and listens at `http://localhost:8091/sse`.
 
 ## Test with MCP Inspector
 
 ```bash
 # Requires Node.js
-npx @modelcontextprotocol/inspector http://localhost:8081/sse
+npx @modelcontextprotocol/inspector http://localhost:8091/sse
 ```
 
-Opens a web UI (typically `http://localhost:5173`) to browse and call tools interactively.
+Opens a web UI (typically `http://localhost:6374`) to browse and call tools interactively.
 
 ## Tools (4)
 
@@ -52,8 +52,8 @@ Opens a web UI (typically `http://localhost:5173`) to browse and call tools inte
 
 | Service | Port | Command |
 |---------|------|---------|
-| FastAPI Engine | 8080 | `uv run hr-engine` |
-| FastMCP 2 SSE | 8081 | `uv run hr-mcp` |
+| FastAPI Engine | 8090 | `uv run hr-engine` |
+| FastMCP 2 SSE | 8091 | `uv run hr-mcp` |
 
 Engine prints all 4 URIs on startup: Web UI, API, Docs, MCP SSE.
 
@@ -74,8 +74,8 @@ contoso-hr-agent/
 
 | Issue | Solution |
 |-------|----------|
-| Port 8081 in use | Server force-kills port on startup; restart with `uv run hr-mcp` |
-| Inspector cannot connect | Verify `http://localhost:8081/sse` is reachable |
+| Port 8091 in use | Server force-kills port on startup; restart with `uv run hr-mcp` |
+| Inspector cannot connect | Verify `http://localhost:8091/sse` is reachable |
 | Tools fail with auth errors | Check `.env` has Azure AI Foundry credentials |
 | ChromaDB queries return nothing | Run `uv run hr-seed` to populate the vector store |
 

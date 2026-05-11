@@ -13,7 +13,7 @@
     - `pipeline/` -- LangGraph + CrewAI orchestration (graph.py, agents.py, tasks.py, tools.py, prompts.py)
     - `knowledge/` -- ChromaDB vector store (vectorizer.py) and document retrieval (retriever.py)
     - `watcher/` -- Folder watcher for event-driven resume processing
-    - `mcp_server/` -- FastMCP 2 server (SSE on port 8081)
+    - `mcp_server/` -- FastMCP 2 server (SSE on port 8091)
     - `memory/` -- SQLite store (sqlite_store.py) and LangGraph checkpoints (checkpoints.py)
     - `util/` -- Port utilities
   - `web/` -- Three HTML pages: chat.html, candidates.html, runs.html
@@ -23,9 +23,9 @@
 
 ## Key Workflows
 
-- **Run the HR engine (FastAPI on port 8080):** `uv run hr-engine`
+- **Run the HR engine (FastAPI on port 8090):** `uv run hr-engine`
 - **Run the folder watcher (event-driven resume processing):** `uv run hr-watcher`
-- **Run the MCP server (FastMCP 2 on port 8081):** `uv run hr-mcp`
+- **Run the MCP server (FastMCP 2 on port 8091):** `uv run hr-mcp`
 - **Seed the knowledge base into ChromaDB:** `uv run hr-seed`
 - **Run tests:** `uv run pytest tests/ -v`
 - **Lint/format:** `uv run ruff check src/ tests/` and `uv run ruff format src/ tests/`
@@ -35,8 +35,8 @@
 ## Tech Stack
 
 - **Orchestration:** LangGraph StateGraph + CrewAI (fully coupled pipeline)
-- **LLM:** Azure AI Foundry (gpt-4-1-mini via AzureChatOpenAI / LiteLLM)
-- **Embeddings:** Azure AI Foundry (text-embedding-3-large via AzureOpenAIEmbeddings)
+- **LLM:** Azure AI Foundry (gpt-5.4-1 via AzureChatOpenAI / LiteLLM)
+- **Embeddings:** Azure AI Foundry (text-embedding-ada-002-1 via AzureOpenAIEmbeddings)
 - **Vector Store:** ChromaDB (local)
 - **Database:** SQLite (hr.db for evaluations, checkpoints.db for LangGraph state)
 - **MCP Server:** FastMCP 2 (SSE transport)
@@ -103,7 +103,7 @@ ResumeSubmission -> PolicyContext -> CandidateEval -> HRDecision -> EvaluationRe
 - **Azure AI Foundry:** LLM and embedding provider (all three client types share endpoint/key from .env)
 - **ChromaDB:** Local vector store for policy/knowledge retrieval
 - **Brave Search:** External web search for candidate research
-- **FastMCP 2:** Exposes agent tools as MCP endpoints (SSE on port 8081)
+- **FastMCP 2:** Exposes agent tools as MCP endpoints (SSE on port 8091)
 
 ## Examples
 

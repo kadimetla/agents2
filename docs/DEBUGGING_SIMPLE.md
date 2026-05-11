@@ -18,9 +18,9 @@
 
 Click the dropdown at top of Debug panel, select:
 
-- **HR Engine** -- FastAPI server (port 8080), serves web UI + REST API
+- **HR Engine** -- FastAPI server (port 8090), serves web UI + REST API
 - **HR Watcher** -- watches `data/incoming/` for resume files
-- **MCP Server** -- FastMCP 2 on port 8081
+- **MCP Server** -- FastMCP 2 on port 8091
 - **Run Tests** -- all pytest tests
 
 ### Step 3: Start Debugging
@@ -146,8 +146,8 @@ state.get("error")
 
 | Service | Port | Command |
 |---------|------|---------|
-| FastAPI Engine | 8080 | `uv run hr-engine` |
-| FastMCP 2 SSE | 8081 | `uv run hr-mcp` |
+| FastAPI Engine | 8090 | `uv run hr-engine` |
+| FastMCP 2 SSE | 8091 | `uv run hr-mcp` |
 
 ---
 

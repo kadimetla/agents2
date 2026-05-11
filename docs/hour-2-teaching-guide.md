@@ -55,18 +55,18 @@ cat .env | grep -E "AZURE_AI_FOUNDRY"
 
 ```bash
 uv run hr-engine
-# Starts on http://localhost:8080
+# Starts on http://localhost:8090
 ```
 
 **Open the web UI in your browser:**
 
-- **Chat page:** <http://localhost:8080> (chat.html) -- talk to Alex the HR concierge, upload resumes
-- **Candidates page:** <http://localhost:8080/candidates.html> -- results grid of evaluated candidates
-- **Pipeline Runs page:** <http://localhost:8080/runs.html> -- live pipeline execution trace
+- **Chat page:** <http://localhost:8090> (chat.html) -- talk to Alex the HR concierge, upload resumes
+- **Candidates page:** <http://localhost:8090/candidates.html> -- results grid of evaluated candidates
+- **Pipeline Runs page:** <http://localhost:8090/runs.html> -- live pipeline execution trace
 
 **Demo: Upload a resume via the Chat page:**
 
-1. Open http://localhost:8080
+1. Open http://localhost:8090
 2. Click the upload button or drop a resume file (.txt, .md, .pdf, .docx)
 3. Watch the pipeline execute
 
@@ -253,9 +253,9 @@ code c:/github/agents2
 
 | Config | Purpose | Best For |
 | --- | --- | --- |
-| HR Engine | FastAPI on port 8080 | Testing the full web UI |
+| HR Engine | FastAPI on port 8090 | Testing the full web UI |
 | Folder Watcher | Event-driven resume processing | Testing file drop automation |
-| MCP Server | FastMCP 2 on port 8081 | Testing MCP tools/resources |
+| MCP Server | FastMCP 2 on port 8091 | Testing MCP tools/resources |
 | Run Tests (All) | All pytest tests | TDD workflow |
 | Seed Knowledge | Re-seed ChromaDB | Testing knowledge ingestion |
 
@@ -287,7 +287,7 @@ code c:/github/agents2
 **Run:**
 
 1. Press F5, select "HR Engine"
-2. Upload a resume via <http://localhost:8080>
+2. Upload a resume via <http://localhost:8090>
 3. When it pauses at intake_node:
    - **Variables pane:** Expand `state` to see `resume_submission`
    - **Debug Console:** Type `state["resume_submission"]`
@@ -386,14 +386,14 @@ request.session_id
 **Start the engine:**
 
 ```bash
-uv run hr-engine          # FastAPI on http://localhost:8080
+uv run hr-engine          # FastAPI on http://localhost:8090
 ```
 
 **Web pages:**
 
-- <http://localhost:8080> -- Chat with Alex + upload resumes
-- <http://localhost:8080/candidates.html> -- Results grid
-- <http://localhost:8080/runs.html> -- Pipeline Runs trace (parallel branches)
+- <http://localhost:8090> -- Chat with Alex + upload resumes
+- <http://localhost:8090/candidates.html> -- Results grid
+- <http://localhost:8090/runs.html> -- Pipeline Runs trace (parallel branches)
 
 **Run tests:**
 

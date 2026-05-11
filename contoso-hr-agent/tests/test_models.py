@@ -65,7 +65,7 @@ class TestCandidateEval:
 
 class TestHRDecision:
     def test_valid_decisions(self):
-        for decision in ("advance", "hold", "reject"):
+        for decision in ("Strong Match", "Possible Match", "Needs Review", "Not Qualified"):
             d = HRDecision(
                 decision=decision,
                 reasoning="Test reason",
@@ -79,7 +79,7 @@ class TestHRDecision:
 
     def test_score_bounds(self):
         with pytest.raises(ValidationError):
-            HRDecision(decision="advance", reasoning="x", overall_score=101)
+            HRDecision(decision="Strong Match", reasoning="x", overall_score=101)
 
 
 class TestPolicyContext:
@@ -109,10 +109,10 @@ class TestEvaluationResult:
                 skills_match_score=80, experience_score=70, culture_fit_notes=""
             ),
             hr_decision=HRDecision(
-                decision="advance", reasoning="Strong candidate", overall_score=75
+                decision="Strong Match", reasoning="Strong candidate", overall_score=75
             ),
         )
-        assert result.decision == "advance"
+        assert result.decision == "Strong Match"
         assert result.overall_score == 75
 
 

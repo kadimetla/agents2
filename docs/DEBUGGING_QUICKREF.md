@@ -9,9 +9,9 @@
 
 | # | Config | Purpose | Key Breakpoint Locations |
 |---|--------|---------|--------------------------|
-| 1 | HR Engine | FastAPI server on port 8080 | `src/contoso_hr/engine.py` |
+| 1 | HR Engine | FastAPI server on port 8090 | `src/contoso_hr/engine.py` |
 | 2 | HR Watcher | File watcher for `data/incoming/` | `src/contoso_hr/watcher/resume_watcher.py` |
-| 3 | MCP Server | FastMCP 2 SSE on port 8081 | `src/contoso_hr/mcp_server/server.py` |
+| 3 | MCP Server | FastMCP 2 SSE on port 8091 | `src/contoso_hr/mcp_server/server.py` |
 | 4 | Run Tests | All pytest tests | `tests/` |
 | 5 | Debug Current File | Run whatever file is open | Your open file |
 
@@ -82,8 +82,8 @@ state.get("error")                    # Check for pipeline errors
 
 | Service | Port | Command |
 |---------|------|---------|
-| FastAPI Engine | 8080 | `uv run hr-engine` |
-| FastMCP 2 SSE | 8081 | `uv run hr-mcp` |
+| FastAPI Engine | 8090 | `uv run hr-engine` |
+| FastMCP 2 SSE | 8091 | `uv run hr-mcp` |
 
 ## Troubleshooting
 

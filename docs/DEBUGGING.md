@@ -23,9 +23,9 @@
 
 | # | Config | Purpose | Key Breakpoint Locations |
 |---|--------|---------|--------------------------|
-| 1 | HR Engine | FastAPI on port 8080 | `contoso-hr-agent/src/contoso_hr/engine.py` |
+| 1 | HR Engine | FastAPI on port 8090 | `contoso-hr-agent/src/contoso_hr/engine.py` |
 | 2 | HR Watcher | File watcher for `data/incoming/` | `contoso-hr-agent/src/contoso_hr/watcher/resume_watcher.py` |
-| 3 | MCP Server | FastMCP 2 on port 8081 | `contoso-hr-agent/src/contoso_hr/mcp_server/server.py` |
+| 3 | MCP Server | FastMCP 2 on port 8091 | `contoso-hr-agent/src/contoso_hr/mcp_server/server.py` |
 | 4 | Run Tests | All pytest tests | `contoso-hr-agent/tests/` |
 | 5 | Debug Current File | Whatever file is open | Your open file |
 
@@ -79,8 +79,8 @@ When stopped at a breakpoint:
 
 | Service | Port | Startup |
 |---------|------|---------|
-| FastAPI Engine | 8080 | `uv run hr-engine` |
-| FastMCP 2 SSE | 8081 | `uv run hr-mcp` |
+| FastAPI Engine | 8090 | `uv run hr-engine` |
+| FastMCP 2 SSE | 8091 | `uv run hr-mcp` |
 
 Both services call `force_kill_port()` on startup to claim their port.
 
@@ -90,7 +90,7 @@ Both services call `force_kill_port()` on startup to claim their port.
 
 1. Start `hr-engine` with debugger.
 2. Set breakpoints at the start of each crew node in `graph.py`.
-3. Upload a resume via the web UI (`http://localhost:8080`).
+3. Upload a resume via the web UI (`http://localhost:8090`).
 4. Step through each agent's `crew.kickoff()` call.
 5. Inspect `result.raw` to see the raw LLM output before JSON extraction.
 
@@ -109,9 +109,9 @@ Both services call `force_kill_port()` on startup to claim their port.
 
 ### Scenario 4: MCP Inspector not connecting
 
-1. Ensure MCP server is running: `uv run hr-mcp` (port 8081).
-2. Open `http://localhost:8081/sse` in browser -- should see SSE stream.
-3. Run inspector: `npx @modelcontextprotocol/inspector http://localhost:8081/sse`.
+1. Ensure MCP server is running: `uv run hr-mcp` (port 8091).
+2. Open `http://localhost:8091/sse` in browser -- should see SSE stream.
+3. Run inspector: `npx @modelcontextprotocol/inspector http://localhost:8091/sse`.
 
 ## Key Files for Debugging
 

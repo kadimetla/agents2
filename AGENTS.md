@@ -12,7 +12,7 @@
 - `src/contoso_hr/` holds core code (pipeline, knowledge, memory, watcher, MCP server, engine).
 - `src/contoso_hr/pipeline/graph.py` implements a **parallel fan-out/fan-in** LangGraph StateGraph: `intake` fans out to `policy_expert` and `resume_analyst` (run concurrently), which fan in to `decision_maker`, then `notify`.
 - `src/contoso_hr/pipeline/agents.py` defines four CrewAI agents: ChatConciergeAgent ("Alex"), PolicyExpertAgent, ResumeAnalystAgent, DecisionMakerAgent.
-- `src/contoso_hr/engine.py` is the FastAPI server (port 8080) serving all API endpoints and three web pages.
+- `src/contoso_hr/engine.py` is the FastAPI server (port 8090) serving all API endpoints and three web pages.
 - `data/` contains runtime directories: `incoming/`, `outgoing/`, `processed/`, `chroma/`, `chat_sessions/`, `checkpoints.db`, `hr.db` (all gitignored).
 - `sample_resumes/` provides 13 trainer candidate resume files for local runs.
 - `sample_knowledge/` provides 8 HR policy documents for ChromaDB seeding (146 chunks).
@@ -25,7 +25,7 @@
 
 ### Stack
 
-LangGraph + CrewAI + FastMCP 2 + Azure AI Foundry (gpt-4-1-mini + text-embedding-3-large) + ChromaDB (146 chunks, 8 docs) + SQLite + Brave Search API
+LangGraph + CrewAI + FastMCP 2 + Azure AI Foundry (gpt-5.4-1 + text-embedding-ada-002-1) + ChromaDB (146 chunks, 8 docs) + SQLite + Brave Search API
 
 ### API Endpoints
 
@@ -43,8 +43,8 @@ LangGraph + CrewAI + FastMCP 2 + Azure AI Foundry (gpt-4-1-mini + text-embedding
 
 ### Ports
 
-- Engine: 8080 (force-killed on startup)
-- MCP SSE: 8081 (force-killed on startup)
+- Engine: 8090 (force-killed on startup)
+- MCP SSE: 8091 (force-killed on startup)
 
 ### Four Dispositions
 
@@ -56,9 +56,9 @@ From `contoso-hr-agent/`:
 
 - `uv venv && uv sync && uv run hr-seed` sets up the environment and seeds ChromaDB.
 - `.\scripts\setup.ps1` or `./scripts/setup.sh` runs full setup.
-- `uv run hr-engine` starts the FastAPI server on port 8080.
+- `uv run hr-engine` starts the FastAPI server on port 8090.
 - `uv run hr-watcher` starts the file watcher for `data/incoming/`.
-- `uv run hr-mcp` starts the FastMCP 2 server on port 8081.
+- `uv run hr-mcp` starts the FastMCP 2 server on port 8091.
 - `uv run hr-seed` re-seeds ChromaDB from `sample_knowledge/`.
 - `.\scripts\start.ps1` or `./scripts/start.sh` starts engine + watcher together.
 - `uv run pytest tests/ -v` runs the test suite.

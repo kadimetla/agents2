@@ -142,7 +142,7 @@ function showGridError() {
   document.getElementById('candidates-grid').innerHTML = `
     <div class="empty-state" style="grid-column:1/-1">
       <div class="icon">⚠️</div>
-      <p>Could not load candidates.<br>Is the server running on port 8080?</p>
+      <p>Could not load candidates.<br>Is the server running on port 8090?</p>
     </div>`;
 }
 

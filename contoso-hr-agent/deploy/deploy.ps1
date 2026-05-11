@@ -4,10 +4,10 @@
 
 .DESCRIPTION
     One-command PoC deployment using Azure CLI. Deploys:
-      - Resource Group (rg-contoso-hr-poc, eastus2)
+      - Resource Group (rg-aiagents-may2026, eastus2)
       - Azure Container Registry (Basic SKU)
       - Container Apps Environment (Consumption)
-      - Container App for hr-engine (0.5 CPU / 1Gi, external ingress on 8080)
+      - Container App for hr-engine (0.5 CPU / 1Gi, external ingress on 8090)
       - Azure API Management (Consumption tier, no APIs wired)
 
     Reads secrets from ../. env and passes them as Container App secrets.
@@ -15,7 +15,7 @@
 
 .NOTES
     Run from contoso-hr-agent/ directory:  .\deploy\deploy.ps1
-    Teardown:  az group delete --name rg-contoso-hr-poc --yes --no-wait
+    Teardown:  az group delete --name rg-aiagents-may2026 --yes --no-wait
 
     Estimated cost: ~$2-4/day (Container Apps Consumption + ACR Basic + APIM Consumption).
     APIM Consumption tier takes 30-45 min to fully activate after creation.
@@ -33,12 +33,12 @@ if ($PSVersionTable.PSVersion.Major -ge 7 -and $PSVersionTable.PSVersion.Minor -
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-$RESOURCE_GROUP   = "rg-contoso-hr-poc"
+$RESOURCE_GROUP   = "rg-aiagents-may2026"
 $LOCATION         = "eastus2"
-$ACR_NAME         = "contosohrpocacr"     # Must be globally unique, alphanumeric only
-$ENV_NAME         = "contoso-hr-env"
-$APP_NAME         = "contoso-hr-engine"
-$APIM_NAME        = "contoso-hr-apim"
+$ACR_NAME         = "acraiagentsmay2026"  # Must be globally unique, alphanumeric only
+$ENV_NAME         = "cae-aiagents-may2026"
+$APP_NAME         = "ca-hr-engine-may2026"
+$APIM_NAME        = "apim-aiagents-may2026"
 $IMAGE_NAME       = "contoso-hr-agent"
 $IMAGE_TAG        = "latest"
 $TAGS             = @("purpose=training", "owner=trainer", "auto-delete=true")
@@ -247,8 +247,8 @@ $envVarStr = @(
     "BRAVE_API_KEY=secretref:brave-api-key",
     "LLM_TEMPERATURE=$(Get-EnvOrDefault $envVars 'LLM_TEMPERATURE' '0.2')",
     "LOG_LEVEL=$(Get-EnvOrDefault $envVars 'LOG_LEVEL' 'INFO')",
-    "ENGINE_PORT=8080",
-    "MCP_PORT=8081",
+    "ENGINE_PORT=8090",
+    "MCP_PORT=8091",
     "WATCH_POLL_SECONDS=$(Get-EnvOrDefault $envVars 'WATCH_POLL_SECONDS' '3')"
 ) -join " "
 
@@ -260,7 +260,7 @@ az containerapp create `
     --registry-server $acrLoginServer `
     --registry-username $acrUsername `
     --registry-password $acrPassword `
-    --target-port 8080 `
+    --target-port 8090 `
     --ingress external `
     --min-replicas 0 `
     --max-replicas 1 `

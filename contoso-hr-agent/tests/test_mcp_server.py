@@ -69,22 +69,25 @@ class TestMCPPrompts:
 
     def test_evaluate_resume_prompt(self):
         from contoso_hr.mcp_server.server import evaluate_resume
-        result = evaluate_resume("Alice Zhang — Senior Engineer", role="Cloud Architect")
-        assert "Cloud Architect" in result
-        assert "Alice Zhang" in result
-        assert "Contoso" in result
+        messages = evaluate_resume.fn("Alice Zhang — Senior Engineer", role="Cloud Architect")
+        combined = " ".join(m["content"] for m in messages)
+        assert "Cloud Architect" in combined
+        assert "Alice Zhang" in combined
+        assert "Contoso" in combined
 
     def test_evaluate_resume_no_role(self):
         from contoso_hr.mcp_server.server import evaluate_resume
-        result = evaluate_resume("Some resume text")
-        assert "resume" in result.lower()
-        assert "Some resume text" in result
+        messages = evaluate_resume.fn("Some resume text")
+        combined = " ".join(m["content"] for m in messages)
+        assert "resume" in combined.lower()
+        assert "Some resume text" in combined
 
     def test_policy_query_prompt(self):
         from contoso_hr.mcp_server.server import policy_query
-        result = policy_query("What is the salary band for Level 3?")
-        assert "Level 3" in result
-        assert "Contoso" in result
+        messages = policy_query.fn("What is the salary band for Level 3?")
+        combined = " ".join(m["content"] for m in messages)
+        assert "Level 3" in combined
+        assert "Contoso" in combined
 
 
 class TestMCPPortUtils:

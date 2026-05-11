@@ -41,7 +41,7 @@ class Config:
     azure_foundry_api_version: str = "2024-05-01-preview"
 
     # Azure AI Foundry — embeddings
-    azure_foundry_embedding_model: str = "text-embedding-3-large"
+    azure_foundry_embedding_model: str = "text-embedding-ada-002-1"
 
     # Optional integrations
     brave_api_key: Optional[str] = None
@@ -55,8 +55,8 @@ class Config:
     llm_temperature: float = 0.2
     watch_poll_seconds: int = 3
     log_level: str = "INFO"
-    engine_port: int = 8080
-    mcp_port: int = 8081
+    engine_port: int = 8090
+    mcp_port: int = 8091
 
     # Directories (derived from project_root in __post_init__)
     project_root: Path = field(default_factory=Path.cwd)
@@ -105,9 +105,9 @@ class Config:
 
         endpoint = os.getenv("AZURE_AI_FOUNDRY_ENDPOINT", "")
         key = os.getenv("AZURE_AI_FOUNDRY_KEY", "")
-        chat_model = os.getenv("AZURE_AI_FOUNDRY_CHAT_MODEL", "gpt-4o")
+        chat_model = os.getenv("AZURE_AI_FOUNDRY_CHAT_MODEL", "gpt-5.4-1")
         embedding_model = os.getenv(
-            "AZURE_AI_FOUNDRY_EMBEDDING_MODEL", "text-embedding-3-large"
+            "AZURE_AI_FOUNDRY_EMBEDDING_MODEL", "text-embedding-ada-002-1"
         )
         api_version = os.getenv("AZURE_AI_FOUNDRY_API_VERSION", "2024-05-01-preview")
 
@@ -124,8 +124,8 @@ class Config:
             llm_temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
             watch_poll_seconds=int(os.getenv("WATCH_POLL_SECONDS", "3")),
             log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
-            engine_port=int(os.getenv("ENGINE_PORT", "8080")),
-            mcp_port=int(os.getenv("MCP_PORT", "8081")),
+            engine_port=int(os.getenv("ENGINE_PORT", "8090")),
+            mcp_port=int(os.getenv("MCP_PORT", "8091")),
             project_root=project_root,
         )
 

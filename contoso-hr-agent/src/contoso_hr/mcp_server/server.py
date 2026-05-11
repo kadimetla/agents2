@@ -3,9 +3,9 @@ Contoso HR Agent — FastMCP 2 MCP Server.
 
 Demonstrates all five MCP primitives with domain-relevant examples.
 
-Transport: stdio (MCP Inspector) or SSE on port 8081.
+Transport: stdio (MCP Inspector) or SSE on port 8091.
   stdio:  npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
-  SSE:    uv run hr-mcp  →  http://localhost:8081/sse
+  SSE:    uv run hr-mcp  →  http://localhost:8091/sse
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -189,7 +189,7 @@ async def confirm_and_evaluate(resume_text: str, ctx: Context, filename: str = "
         message=(
             f"Ready to run the full AI evaluation pipeline for **{filename}**.\n\n"
             f"Preview: _{preview}{'...' if len(resume_text) > 300 else ''}_\n\n"
-            f"This will call Azure AI Foundry (gpt-4-1-mini), ChromaDB, and Brave Search. "
+            f"This will call Azure AI Foundry (gpt-5.4-1), ChromaDB, and Brave Search. "
             f"Estimated time: 30–120 seconds.\n\n"
             f"Confirm to proceed."
         ),

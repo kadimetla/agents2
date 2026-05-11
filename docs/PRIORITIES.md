@@ -1,6 +1,6 @@
 # Contoso HR Agent -- Current State and Teaching Focus
 
-**Last Updated:** 2026-03-29
+**Last Updated:** 2026-05-10
 
 ## What Is Built
 
@@ -14,12 +14,12 @@ demo for the O'Reilly *Build Production AI Agents* course.
 |-------|------------|
 | Orchestration | LangGraph (StateGraph with parallel fan-out/fan-in) |
 | Agent personas | CrewAI (4 agents, one Crew per LangGraph node) |
-| LLM / Embeddings | Azure AI Foundry (gpt-4-1-mini + text-embedding-3-large) |
+| LLM / Embeddings | Azure AI Foundry (gpt-5.4-1 + text-embedding-ada-002-1) |
 | Vector store | ChromaDB (local, seeded from policy docs) |
 | Persistence | SQLite (hr.db for candidates, checkpoints.db for LangGraph) |
 | Web search | Brave Search API (optional, graceful degradation) |
-| MCP | FastMCP 2 (SSE on port 8081) |
-| Web UI | FastAPI static files on port 8080 (chat.html, candidates.html, runs.html) |
+| MCP | FastMCP 2 (SSE on port 8091) |
+| Web UI | FastAPI static files on port 8090 (chat.html, candidates.html, runs.html) |
 | API | FastAPI REST -- /api/chat, /api/upload, /api/candidates, /api/stats, /api/chat/sessions, /api/health |
 
 ### Pipeline

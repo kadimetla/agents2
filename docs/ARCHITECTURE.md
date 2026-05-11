@@ -21,7 +21,7 @@ flowchart LR
     USER["User<br/>(Browser)"]
     INSPECTOR["MCP Client<br/>(Inspector)"]
 
-    subgraph ENGINE["FastAPI Engine :8080"]
+    subgraph ENGINE["FastAPI Engine :8090"]
         direction TB
         WEBUI["Web UI<br/>chat.html / candidates.html / runs.html"]
         API["REST API<br/>/api/chat  /api/upload  /api/chat/sessions<br/>/api/candidates  /api/stats"]
@@ -47,10 +47,10 @@ flowchart LR
         CHAT_JSON["JSON Files<br/>data/chat_sessions/"]
     end
 
-    AZURE{{"Azure AI Foundry<br/>gpt-4-1-mini<br/>text-embedding-3-large"}}
+    AZURE{{"Azure AI Foundry<br/>gpt-5.4-1<br/>text-embedding-ada-002-1"}}
     style AZURE fill:#50B0F0,color:#004E8C,stroke:#004E8C
 
-    MCP_SERVER["FastMCP 2<br/>SSE :8081"]
+    MCP_SERVER["FastMCP 2<br/>SSE :8091"]
     style MCP_SERVER fill:#0078D4,color:#FFFFFF,stroke:#004E8C
 
     WATCHER["File Watcher<br/>data/incoming/"]
@@ -83,9 +83,9 @@ flowchart LR
 
 **Key points:**
 
-- The FastAPI engine serves the static web UI (chat.html, candidates.html, runs.html) and the REST API on port 8080. On startup it prints all 4 URIs: Web UI, API, Docs, MCP SSE.
+- The FastAPI engine serves the static web UI (chat.html, candidates.html, runs.html) and the REST API on port 8090. On startup it prints all 4 URIs: Web UI, API, Docs, MCP SSE.
 - The file watcher is a separate process that polls `data/incoming/` and feeds resumes into the same LangGraph pipeline.
-- The FastMCP 2 server on port 8081 exposes tools, resources, and prompts for MCP-compatible clients (e.g., MCP Inspector).
+- The FastMCP 2 server on port 8091 exposes tools, resources, and prompts for MCP-compatible clients (e.g., MCP Inspector).
 - All LLM and embedding calls route through Azure AI Foundry.
 
 
@@ -153,7 +153,7 @@ flowchart TD
 
 **Agent-tool mapping:**
 
-- `query_hr_policy` -- wraps `knowledge/retriever.py`, performs semantic search against ChromaDB using Azure `text-embedding-3-large`. Shared by ChatConcierge and PolicyExpert.
+- `query_hr_policy` -- wraps `knowledge/retriever.py`, performs semantic search against ChromaDB using Azure `text-embedding-ada-002-1`. Shared by ChatConcierge and PolicyExpert.
 - `brave_web_search` -- calls the Brave Search API via `httpx` for candidate/company verification. Used only by ResumeAnalyst. Gracefully degrades if `BRAVE_API_KEY` is not set.
 
 
@@ -397,8 +397,8 @@ flowchart LR
     subgraph DEV["Developer Machine"]
         direction TB
         UV["uv project<br/>.venv"]
-        FASTAPI_DEV["FastAPI :8080"]
-        MCP_DEV["FastMCP :8081"]
+        FASTAPI_DEV["FastAPI :8090"]
+        MCP_DEV["FastMCP :8091"]
         WATCHER_DEV["File Watcher"]
         CHROMA_LOCAL[("ChromaDB<br/>data/chroma/")]
         SQLITE_LOCAL[("SQLite<br/>data/hr.db<br/>data/checkpoints.db")]
@@ -407,11 +407,11 @@ flowchart LR
 
     subgraph AZURE_SUB["Azure Subscription"]
         direction TB
-        subgraph RG["contoso-hr-rg (eastus2)"]
+        subgraph RG["scribe-rg (eastus2)"]
             direction TB
-            subgraph AI_RESOURCE["contoso-hr-ai (AIServices S0)"]
-                GPT["gpt-4-1-mini<br/>Chat Completion"]
-                EMB["text-embedding-3-large<br/>Embeddings"]
+            subgraph AI_RESOURCE["scribe-foundry-resource (Cognitive Services)"]
+                GPT["gpt-5.4-1<br/>Chat Completion"]
+                EMB["text-embedding-ada-002-1<br/>Embeddings"]
             end
         end
     end
@@ -434,8 +434,8 @@ flowchart LR
 |----------|---------|
 | `AZURE_AI_FOUNDRY_ENDPOINT` | Azure AI Foundry endpoint URL |
 | `AZURE_AI_FOUNDRY_KEY` | API key for Azure AI Foundry |
-| `AZURE_AI_FOUNDRY_CHAT_MODEL` | Chat deployment name (e.g., `gpt-4-1-mini`) |
-| `AZURE_AI_FOUNDRY_EMBEDDING_MODEL` | Embedding deployment name (e.g., `text-embedding-3-large`) |
+| `AZURE_AI_FOUNDRY_CHAT_MODEL` | Chat deployment name (e.g., `gpt-5.4-1`) |
+| `AZURE_AI_FOUNDRY_EMBEDDING_MODEL` | Embedding deployment name (e.g., `text-embedding-ada-002-1`) |
 | `BRAVE_API_KEY` | Brave Search API key (optional -- degrades gracefully) |
 
 **LLM integration pattern:** CrewAI agents use `LLM(model="azure/{deployment}", ...)` which routes through LiteLLM. LangChain nodes use `AzureChatOpenAI` directly. Embeddings use `AzureOpenAIEmbeddings`. All three share the same endpoint and API key.
@@ -455,10 +455,10 @@ The system exposes an MCP (Model Context Protocol) server for tool-calling inter
 flowchart LR
     subgraph MCP_EXTERNAL["(a) FastMCP 2 Server -- external MCP clients"]
         direction TB
-        INSPECTOR["MCP Inspector<br/>localhost:5173"]
+        INSPECTOR["MCP Inspector<br/>localhost:6374"]
         CLAUDE_DESKTOP["Claude Desktop<br/>or other MCP client"]
 
-        subgraph MCP_SRV["FastMCP 2 SSE :8081"]
+        subgraph MCP_SRV["FastMCP 2 SSE :8091"]
             direction TB
             T1["get_candidate()"]
             T2["list_candidates()"]
@@ -511,7 +511,7 @@ flowchart LR
 | Prompt | `evaluate_resume` | Structured resume evaluation prompt |
 | Prompt | `policy_query` | HR policy question prompt |
 
-**Transport:** SSE (Server-Sent Events) at `http://localhost:8081/sse`. Connect via MCP Inspector at `http://localhost:5173` or configure in Claude Desktop's MCP settings.
+**Transport:** SSE (Server-Sent Events) at `http://localhost:8091/sse`. Connect via MCP Inspector at `http://localhost:6374` or configure in Claude Desktop's MCP settings.
 
 
 ---

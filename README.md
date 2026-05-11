@@ -25,7 +25,7 @@ The **Contoso HR Agent** is an automated resume screening and HR policy Q&A syst
 | **Event-Driven Autonomy** | File watcher polls `data/incoming/` -- drop a resume and the full pipeline runs automatically | `watcher/resume_watcher.py` |
 | **Memory and State** | LangGraph `SqliteSaver` checkpoints + SQLite candidate store + server-side chat session JSON | `memory/`, `data/hr.db`, `data/checkpoints.db` |
 | **Parallel LLM Reasoning** | LangGraph StateGraph fan-out/fan-in: `policy_expert` and `resume_analyst` run **concurrently**, then fan-in to `decision_maker` | `pipeline/graph.py`, `pipeline/agents.py` |
-| **MCP Tool Calling** | FastMCP 2 SSE server exposes tools, resources, and prompts to external AI clients | `mcp_server/server.py` (port 8081) |
+| **MCP Tool Calling** | FastMCP 2 SSE server exposes tools, resources, and prompts to external AI clients | `mcp_server/server.py` (port 8091) |
 
 ---
 
@@ -41,7 +41,7 @@ flowchart LR
         RunsUI["runs.html\nPipeline Trace"]
     end
 
-    subgraph FastAPI["FastAPI :8080"]
+    subgraph FastAPI["FastAPI :8090"]
         direction TB
         ChatAPI["/api/chat\n/api/chat/sessions"]
         UploadAPI["/api/upload"]
@@ -63,8 +63,8 @@ flowchart LR
         ChatMem[("Chat Sessions\nJSON files")]
     end
 
-    Azure(["Azure AI Foundry\ngpt-4-1-mini\ntext-embedding-3-large"])
-    MCP["FastMCP :8081\nSSE Server"]
+    Azure(["Azure AI Foundry\ngpt-5.4-1\ntext-embedding-ada-002-1"])
+    MCP["FastMCP :8091\nSSE Server"]
     Watcher["File Watcher\ndata/incoming/"]
     Incoming[/"Resume files\n.txt .md .pdf .docx"/]
 
@@ -109,7 +109,7 @@ flowchart LR
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) package manager
-- Azure AI Foundry account with deployed `gpt-4-1-mini` and `text-embedding-3-large` models
+- Azure AI Foundry account with a chat deployment and an embedding deployment (the reference env uses `gpt-5.4-1` and `text-embedding-ada-002-1`; substitute your own deployment names in `.env`)
 - Optional: [Brave Search API key](https://api.search.brave.com/register) (free tier, 2000 queries/month)
 - Optional: Node.js (for MCP Inspector)
 
@@ -128,25 +128,25 @@ cp .env.example .env
 # Edit .env and set:
 #   AZURE_AI_FOUNDRY_ENDPOINT=https://your-account.cognitiveservices.azure.com/
 #   AZURE_AI_FOUNDRY_KEY=your-key
-#   AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-4-1-mini
-#   AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-large
+#   AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-5.4-1
+#   AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-ada-002-1
 
 # 4. Start everything (FastAPI + file watcher)
 ./scripts/start.sh          # Linux / macOS
 .\scripts\start.ps1         # Windows PowerShell
 
 # 5. Open the UI
-#    Chat:           http://localhost:8080/chat.html
-#    Candidates:     http://localhost:8080/candidates.html
-#    Pipeline Runs:  http://localhost:8080/runs.html
+#    Chat:           http://localhost:8090/chat.html
+#    Candidates:     http://localhost:8090/candidates.html
+#    Pipeline Runs:  http://localhost:8090/runs.html
 ```
 
 ### Individual Services
 
 ```bash
-uv run hr-engine            # FastAPI only (port 8080)
+uv run hr-engine            # FastAPI only (port 8090)
 uv run hr-watcher           # File watcher only
-uv run hr-mcp               # FastMCP 2 server (port 8081)
+uv run hr-mcp               # FastMCP 2 server (port 8091)
 uv run hr-seed --reset      # Clear and re-seed ChromaDB
 ```
 
@@ -286,7 +286,7 @@ Follow these five steps to see every pillar in action:
 
 ### Step 1 -- Chat with the Concierge
 
-Open `http://localhost:8080/chat.html` and ask a policy question:
+Open `http://localhost:8090/chat.html` and ask a policy question:
 
 > "What are the minimum qualifications for the MCT trainer position?"
 
@@ -309,7 +309,7 @@ The file watcher detects the new resume within 3 seconds and triggers the full L
 
 ### Step 4 -- Review Results and Traces
 
-Open `http://localhost:8080/candidates.html` to see the evaluation grid. Click any candidate for the full detail modal. Open `http://localhost:8080/runs.html` to inspect the pipeline trace for each run, including the parallel branches.
+Open `http://localhost:8090/candidates.html` to see the evaluation grid. Click any candidate for the full detail modal. Open `http://localhost:8090/runs.html` to inspect the pipeline trace for each run, including the parallel branches.
 
 ### Step 5 -- Explore MCP
 
@@ -322,13 +322,13 @@ Start the MCP server with `uv run hr-mcp` and use [MCP Inspector](https://github
 When the engine starts, it prints four URIs:
 
 ```
-  Web UI:  http://localhost:8080/chat.html
-  API:     http://localhost:8080/api/
-  Docs:    http://localhost:8080/docs
-  MCP SSE: http://localhost:8081/sse
+  Web UI:  http://localhost:8090/chat.html
+  API:     http://localhost:8090/api/
+  Docs:    http://localhost:8090/docs
+  MCP SSE: http://localhost:8091/sse
 ```
 
-Ports 8080 (engine) and 8081 (MCP) are force-killed on every startup to avoid "address already in use" errors.
+Ports 8090 (engine) and 8091 (MCP) are force-killed on every startup to avoid "address already in use" errors.
 
 ---
 
@@ -356,12 +356,12 @@ agents2/
 │   │   │   ├── sqlite_store.py        # candidates + evaluations tables
 │   │   │   └── checkpoints.py         # LangGraph SqliteSaver wrapper
 │   │   ├── mcp_server/
-│   │   │   └── server.py              # FastMCP 2 SSE server (port 8081)
+│   │   │   └── server.py              # FastMCP 2 SSE server (port 8091)
 │   │   ├── watcher/
 │   │   │   └── resume_watcher.py      # Polls data/incoming/ every 3 seconds
 │   │   ├── util/
 │   │   │   └── port_utils.py          # force_kill_port() for clean startup
-│   │   ├── engine.py                  # FastAPI server (port 8080), web UI + REST API
+│   │   ├── engine.py                  # FastAPI server (port 8090), web UI + REST API
 │   │   ├── config.py                  # Azure AI Foundry config, LLM/embedding factories
 │   │   ├── models.py                  # Pydantic v2 data contracts (full model chain)
 │   │   └── logging_setup.py           # Rich-formatted structured logging
@@ -415,20 +415,20 @@ The Contoso HR Agent connects to Azure AI Foundry for all LLM and embedding call
 
 | Resource | Value |
 |----------|-------|
-| **Resource name** | `contoso-hr-ai` |
-| **Resource group** | `contoso-hr-rg` |
+| **Resource name** | `scribe-foundry-resource` |
+| **Resource group** | `scribe-rg` |
 | **Region** | East US 2 |
-| **Chat model** | `gpt-4-1-mini` |
-| **Embedding model** | `text-embedding-3-large` |
+| **Chat deployment** | `gpt-5.4-1` (model `gpt-5.4`, version `2026-03-05`) |
+| **Embedding deployment** | `text-embedding-ada-002-1` (model `text-embedding-ada-002`) |
 | **API version** | `2024-05-01-preview` |
 
 ### Required Environment Variables
 
 ```bash
-AZURE_AI_FOUNDRY_ENDPOINT=https://contoso-hr-ai.cognitiveservices.azure.com/
+AZURE_AI_FOUNDRY_ENDPOINT=https://scribe-foundry-resource.cognitiveservices.azure.com/
 AZURE_AI_FOUNDRY_KEY=your-api-key
-AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-4-1-mini
-AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-large
+AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-5.4-1
+AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-ada-002-1
 ```
 
 ### Finding Your Credentials
@@ -436,19 +436,20 @@ AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-large
 ```bash
 # Via Azure CLI
 az cognitiveservices account show \
-  --name contoso-hr-ai -g contoso-hr-rg \
+  --name <your-foundry-account> -g <your-resource-group> \
   --query properties.endpoint -o tsv
 
 az cognitiveservices account keys list \
-  --name contoso-hr-ai -g contoso-hr-rg \
+  --name <your-foundry-account> -g <your-resource-group> \
   --query key1 -o tsv
 ```
 
 ### Teardown
 
 ```bash
-# Delete everything when done
-az group delete --name contoso-hr-rg --yes --no-wait
+# Delete everything when done.
+# IMPORTANT: substitute your own RG name. Never run this against a shared resource group.
+az group delete --name <your-resource-group> --yes --no-wait
 ```
 
 ---
@@ -465,7 +466,7 @@ The `oreilly-agent-mvp/` directory contains an earlier iteration of the course d
 |---------|----------|
 | `uv sync` fails | Verify Python 3.11+ is installed (`python --version`). Install uv: `pip install uv` or see [uv docs](https://docs.astral.sh/uv/). |
 | Azure key not working | Check `.env` for typos. Endpoint must end with `/`. Verify deployment names match. |
-| Port already in use | Start scripts auto-kill ports 8080/8081. If stuck, manually kill the process. |
+| Port already in use | Start scripts auto-kill ports 8090/8091. If stuck, manually kill the process. |
 | ChromaDB empty | Run `uv run hr-seed --reset` to clear and re-seed from `sample_knowledge/`. |
 | No web search results | Set `BRAVE_API_KEY` in `.env`. The agent gracefully skips web search if unset. |
 

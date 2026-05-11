@@ -13,7 +13,7 @@
 **What We're Doing This Hour:**
 
 1. Understand MCP (Model Context Protocol)
-2. Configure and test our FastMCP 2 server (port 8081)
+2. Configure and test our FastMCP 2 server (port 8091)
 3. Connect MCP to Claude Desktop and VS Code
 4. Deep-dive into how ChromaDB powers the policy_expert agent
 5. **Vibe code** a new knowledge feature with Claude Code
@@ -68,36 +68,67 @@ After MCP:
 
 | Component | Role | Example |
 | --- | --- | --- |
-| **Server** | Exposes tools, resources, prompts | Our FastMCP 2 server on port 8081 |
+| **Server** | Exposes tools, resources, prompts | Our FastMCP 2 server on port 8091 |
 | **Client** | Calls tools, reads resources | Claude Desktop, VS Code, MCP Inspector |
 | **Transport** | Communication layer | SSE (our server), stdio (local) |
 
-### Our MCP Server Capabilities
+### Our MCP Server Capabilities — All 5 Primitives
+
+**Say:** "MCP defines five primitives. Our server exercises every one of them with domain-relevant examples — that's why this is a real teaching server, not a toy."
 
 **Show the summary:**
 
 ```text
-+==========================================+
-|     CONTOSO HR AGENT MCP SERVER          |
-|     FastMCP 2 -- SSE on port 8081        |
-+==========================================+
-| TOOLS:                                   |
-|  - get_candidate                         |
-|  - list_candidates                       |
-|  - trigger_resume_evaluation             |
-|  - query_policy                          |
-+------------------------------------------+
-| RESOURCES:                               |
-|  - schema://candidate                    |
-|  - stats://evaluations                   |
-|  - samples://resumes                     |
-|  - config://settings                     |
-+------------------------------------------+
-| PROMPTS:                                 |
-|  - evaluate_resume                       |
-|  - policy_query                          |
-+==========================================+
++================================================================+
+|              CONTOSO HR AGENT MCP SERVER                       |
+|           FastMCP 2 -- SSE on port 8091 (or stdio)             |
++================================================================+
+| 1. TOOLS  (server functions the LLM can call)                  |
+|    - get_candidate(candidate_id)                               |
+|    - list_candidates(limit, decision_filter)                   |
+|    - trigger_resume_evaluation(resume_text, filename)          |
+|    - query_policy(question)                                    |
+|    - generate_eval_summary(candidate_id)   <-- uses sampling   |
+|    - confirm_and_evaluate(resume_text)     <-- uses elicit     |
++----------------------------------------------------------------+
+| 2. RESOURCES  (data the LLM can read)                          |
+|    Static:                                                     |
+|      - schema://candidate                                      |
+|      - stats://evaluations                                     |
+|      - samples://resumes                                       |
+|      - config://settings                                       |
+|    Parameterized templates:                                    |
+|      - candidate://{candidate_id}                              |
+|      - policy://{topic}                                        |
++----------------------------------------------------------------+
+| 3. PROMPTS  (reusable message templates)                       |
+|    - evaluate_resume(resume_text, role)                        |
+|    - policy_query(question)                                    |
+|    - disposition_review(candidate_id)                          |
++----------------------------------------------------------------+
+| 4. SAMPLING  (server asks the LLM to generate text)            |
+|    Used inside: generate_eval_summary tool                     |
+|    ctx.sample() sends candidate eval data to the connected LLM |
+|    and returns a concise hiring-manager exec summary           |
++----------------------------------------------------------------+
+| 5. ELICITATION  (server asks the USER a question mid-tool)     |
+|    Used inside: confirm_and_evaluate tool                      |
+|    ctx.elicit() pauses the tool, presents a confirmation form, |
+|    resumes only on accept -- guards the expensive pipeline run |
++================================================================+
 ```
+
+### Why 5 Primitives Matter
+
+| Primitive | What it gives the agent | Why it matters in production |
+| --- | --- | --- |
+| Tools | Verbs (write a row, run the pipeline) | Most agent capability comes from here |
+| Resources | Nouns (read a schema, read settings) | Cheaper than tools — no LLM round-trip on the server side |
+| Prompts | Reusable message templates | Stops every client from re-inventing the same scaffolding |
+| Sampling | Server can ask the LLM for help | Lets the server compose answers without a hard-coded LLM client |
+| Elicitation | Server can ask the user for confirmation | Human-in-the-loop guardrails for expensive or destructive operations |
+
+**Key teaching point:** "Sampling and elicitation are the two newest primitives. They flip the conversation direction — the server can talk back. That's how you build agentic safety into a tool, not just into the prompt."
 
 ---
 
@@ -122,14 +153,14 @@ uv run hr-seed
 ```bash
 # CLI command (registered in pyproject.toml)
 uv run hr-mcp
-# Starts FastMCP 2 on http://localhost:8081/sse
+# Starts FastMCP 2 on http://localhost:8091/sse
 ```
 
 **Start the engine in a separate terminal (for full functionality):**
 
 ```bash
 uv run hr-engine
-# FastAPI on http://localhost:8080
+# FastAPI on http://localhost:8090
 ```
 
 ### Test with MCP Inspector (5 minutes)
@@ -155,8 +186,10 @@ uv run hr-engine
 
 - `get_candidate` with a candidate ID from the list
 - `trigger_resume_evaluation` with resume text
+- `generate_eval_summary` -- watch the **sampling** call return an LLM-written exec summary
+- `confirm_and_evaluate` -- watch the **elicitation** form pop up before the pipeline runs
 
-**Say:** "The Inspector lets you test MCP tools interactively before connecting to Claude Desktop. This is your debugging UI for MCP."
+**Say:** "The Inspector lets you test MCP tools interactively before connecting to Claude Desktop. This is your debugging UI for MCP. When `confirm_and_evaluate` pauses for confirmation, that's elicitation working live — the server is asking the user, not the LLM."
 
 ### Connect to Claude Desktop (4 minutes)
 
@@ -205,7 +238,7 @@ sample_knowledge/             ChromaDB              policy_expert node
 +-----------------+     +-----------------+     +-------------------+
 | .pdf, .docx,    | --> | Azure embeddings| --> | query_hr_policy   |
 | .pptx, .md      |     | text-embedding- |     | tool retrieves    |
-| policy docs      |     | 3-large vectors |     | PolicyContext     |
+| policy docs      |     | ada-002 vectors |     | PolicyContext     |
 +-----------------+     +-----------------+     +-------------------+
       |                                               |
   uv run hr-seed                              PolicyExpertAgent
@@ -225,7 +258,7 @@ sample_knowledge/             ChromaDB              policy_expert node
 
 ### Live Demo: Trace a Policy Query (5 minutes)
 
-**In the web UI chat (<http://localhost:8080>):**
+**In the web UI chat (<http://localhost:8090>):**
 
 1. Ask Alex: "What certifications does a candidate need?"
 2. Watch the server logs -- see the ChromaDB query and results
@@ -325,7 +358,7 @@ Keep it simple and read-only.
 **Test via API:**
 
 ```bash
-curl http://localhost:8080/api/knowledge/summary | python -m json.tool
+curl http://localhost:8090/api/knowledge/summary | python -m json.tool
 ```
 
 **Test via MCP Inspector:**
@@ -373,7 +406,7 @@ curl http://localhost:8080/api/knowledge/summary | python -m json.tool
 **Start MCP server:**
 
 ```bash
-uv run hr-mcp              # FastMCP 2 on port 8081/sse
+uv run hr-mcp              # FastMCP 2 on port 8091/sse
 ```
 
 **Start MCP + Inspector:**
@@ -386,7 +419,7 @@ uv run hr-mcp              # FastMCP 2 on port 8081/sse
 **Start HR engine (needed for full MCP functionality):**
 
 ```bash
-uv run hr-engine            # FastAPI on port 8080
+uv run hr-engine            # FastAPI on port 8090
 ```
 
 **Claude Desktop config location:**
@@ -405,7 +438,7 @@ macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
 **Common issues:**
 
 ```bash
-# Port 8081 already in use -- the server auto-kills it, but if not:
+# Port 8091 already in use -- the server auto-kills it, but if not:
 # Check what's using the port and kill it
 
 # Missing dependencies

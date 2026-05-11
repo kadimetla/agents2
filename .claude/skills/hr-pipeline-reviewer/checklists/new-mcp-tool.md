@@ -12,7 +12,7 @@ Before writing any primitive, confirm:
 - [ ] **Which primitive type?** Tool / Static Resource / Resource Template / Prompt /
   Sampling / Elicitation
 - [ ] **Read-only or state-mutating?** State-mutating primitives require extra review
-- [ ] **Transport tested?** Must work in both SSE (`:8081/sse`) and stdio
+- [ ] **Transport tested?** Must work in both SSE (`:8091/sse`) and stdio
 
 ---
 

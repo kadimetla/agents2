@@ -102,14 +102,36 @@ az login
 az account show
 ```
 
-**Set variables:**
+**Set variables.** We provision a brand-new resource group for this session — never deploy demo workloads into a pre-existing shared RG. Tim's reference Foundry resource (`scribe-foundry-resource` in `scribe-rg`) stays untouched; we only consume its endpoint + key from the new Container App.
 
 ```bash
-RESOURCE_GROUP="rg-contoso-hr"
-LOCATION="eastus"
-CONTAINER_APP_ENV="cae-contoso-hr"
-CONTAINER_APP="ca-hr-engine"
-ACR_NAME="acrcontosohr"
+# Course-specific RG — change the suffix for your own delivery
+RESOURCE_GROUP="rg-aiagents-may2026"
+LOCATION="eastus2"
+
+# Workload resources inside the new RG
+CONTAINER_APP_ENV="cae-aiagents-may2026"
+CONTAINER_APP="ca-hr-engine-may2026"
+ACR_NAME="acraiagentsmay2026"      # ACR names: 5-50 chars, alphanumeric only
+
+# Existing Foundry resource we will REFERENCE (read endpoint+key only, never modify)
+FOUNDRY_RESOURCE_GROUP="scribe-rg"
+FOUNDRY_NAME="scribe-foundry-resource"
+```
+
+**Pull the existing Foundry endpoint + key into local variables:**
+
+```bash
+AZURE_AI_FOUNDRY_ENDPOINT=$(az cognitiveservices account show \
+  --name $FOUNDRY_NAME -g $FOUNDRY_RESOURCE_GROUP \
+  --query properties.endpoint -o tsv)
+
+AZURE_AI_FOUNDRY_KEY=$(az cognitiveservices account keys list \
+  --name $FOUNDRY_NAME -g $FOUNDRY_RESOURCE_GROUP \
+  --query key1 -o tsv)
+
+AZURE_AI_FOUNDRY_CHAT_MODEL="gpt-5.4-1"
+AZURE_AI_FOUNDRY_EMBEDDING_MODEL="text-embedding-ada-002-1"
 ```
 
 ### Step 1: Create Resource Group (2 minutes)
@@ -161,7 +183,7 @@ RUN uv sync --no-dev
 RUN uv run hr-seed
 
 # Expose ports for engine and MCP
-EXPOSE 8080 8081
+EXPOSE 8090 8091
 
 # Run the FastAPI engine
 CMD ["uv", "run", "hr-engine"]
@@ -201,7 +223,7 @@ az containerapp create \
   --registry-server $ACR_NAME.azurecr.io \
   --registry-username $ACR_NAME \
   --registry-password $ACR_PASSWORD \
-  --target-port 8080 \
+  --target-port 8090 \
   --ingress external \
   --cpu 1 \
   --memory 2Gi \
@@ -244,7 +266,7 @@ az containerapp show \
 ### Create APIM Instance (3 minutes)
 
 ```bash
-APIM_NAME="apim-contoso-hr"
+APIM_NAME="apim-aiagents-may2026"
 
 az apim create \
   --name $APIM_NAME \
@@ -299,7 +321,7 @@ az apim create \
 ### Create Cosmos Account (3 minutes)
 
 ```bash
-COSMOS_ACCOUNT="cosmos-contoso-hr"
+COSMOS_ACCOUNT="cosmos-aiagents-may2026"
 
 az cosmosdb create \
   --name $COSMOS_ACCOUNT \
@@ -357,7 +379,7 @@ az cosmosdb sql container create \
 ### Create AI Search Service (3 minutes)
 
 ```bash
-SEARCH_NAME="search-contoso-hr"
+SEARCH_NAME="search-aiagents-may2026"
 
 az search service create \
   --name $SEARCH_NAME \
@@ -410,7 +432,7 @@ sample_knowledge/ -> Azure indexer -> AI Search -> query_hr_policy tool
 
 | Lever | Strategy |
 | --- | --- |
-| **Model selection** | gpt-4-1-mini for routine, gpt-4 for complex decisions |
+| **Model selection** | gpt-5.4-1 for routine + reasoning; route to a smaller `gpt-4o-mini` deployment for high-volume RAG steps |
 | **Caching** | Cache policy queries that repeat across candidates |
 | **Parallel execution** | Our fan-out pattern reduces wall-clock time (same token cost, faster results) |
 | **Circuit breakers** | Stop runaway costs if a node loops or retries excessively |
@@ -559,7 +581,7 @@ az containerapp create \
   --resource-group $RESOURCE_GROUP \
   --environment $CONTAINER_APP_ENV \
   --image $ACR_NAME.azurecr.io/contoso-hr-engine:v1 \
-  --target-port 8080 \
+  --target-port 8090 \
   --ingress external
 ```
 

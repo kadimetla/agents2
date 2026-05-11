@@ -68,5 +68,5 @@ USER appuser
 # Subsequent container restarts re-seed (ephemeral storage in ACA).
 CMD ["sh", "-c", "hr-seed && hr-engine"]
 
-# FastAPI engine listens on 8080
-EXPOSE 8080
+# FastAPI engine listens on 8090
+EXPOSE 8090

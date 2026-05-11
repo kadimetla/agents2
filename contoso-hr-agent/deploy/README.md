@@ -4,10 +4,10 @@
 
 | Resource | SKU / Tier | Estimated Cost | Purpose |
 |----------|-----------|----------------|---------|
-| Resource Group | `rg-contoso-hr-poc` | Free | Single-group teardown |
+| Resource Group | `rg-aiagents-may2026` | Free | Single-group teardown |
 | Container Registry | Basic | ~$0.17/day | Stores the Docker image |
 | Container Apps Env | Consumption | ~$0/day (idle) | Serverless container hosting |
-| Container App | 0.5 CPU / 1Gi | ~$0-2/day | Runs hr-engine (FastAPI on 8080) |
+| Container App | 0.5 CPU / 1Gi | ~$0-2/day | Runs hr-engine (FastAPI on 8090) |
 | API Management | Consumption | ~$0/day (pay per call) | Future Entra ID auth gateway |
 
 **Total estimated cost: ~$2-4/day when active, under $1/day when idle.**
@@ -43,7 +43,7 @@ After deployment, check these URLs (printed by the script):
 Single command destroys everything:
 
 ```powershell
-az group delete --name rg-contoso-hr-poc --yes --no-wait
+az group delete --name rg-aiagents-may2026 --yes --no-wait
 ```
 
 ## Architecture Notes
@@ -59,7 +59,7 @@ az group delete --name rg-contoso-hr-poc --yes --no-wait
 
 - **ChromaDB is ephemeral:** Stored in container filesystem, lost on restart. OK for demos.
 - **SQLite is ephemeral:** Same caveat. Candidate evaluations reset on restart.
-- **No MCP server:** Only hr-engine is deployed (port 8080). The MCP SSE server (port 8081) is not exposed. To add it, deploy a second Container App or add a second container to the same app.
+- **No MCP server:** Only hr-engine is deployed (port 8090). The MCP SSE server (port 8091) is not exposed. To add it, deploy a second Container App or add a second container to the same app.
 - **No authentication:** Container App ingress is open. This is intentional for PoC.
 - **Scale to zero:** Min replicas is 0, so the app may cold-start after idle periods (~30s).
 
@@ -74,8 +74,8 @@ The API Management instance is deployed but has no APIs wired. To add Entra ID a
    - Note the Application (client) ID and create a client secret
 3. **Add the Container App as an APIM backend:**
    ```
-   az apim api create --resource-group rg-contoso-hr-poc \
-     --service-name contoso-hr-apim \
+   az apim api create --resource-group rg-aiagents-may2026 \
+     --service-name apim-aiagents-may2026 \
      --api-id contoso-hr-api \
      --path /hr \
      --display-name "Contoso HR API" \

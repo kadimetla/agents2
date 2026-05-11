@@ -3,6 +3,13 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Smoke-test artifacts
+*.smoke.log
+engine_smoke*.log
+
+# Session handoff notes — contain Azure subscription/tenant IDs, never commit
+TODO.md
+
 # C extensions
 *.so
 

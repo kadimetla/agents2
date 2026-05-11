@@ -27,14 +27,14 @@ uv venv && uv sync && uv run hr-seed
 uv run hr-mcp
 ```
 
-The server starts on port 8081 (force-kills any existing process on that port) and
-listens for SSE connections at `http://localhost:8081/sse`.
+The server starts on port 8091 (force-kills any existing process on that port) and
+listens for SSE connections at `http://localhost:8091/sse`.
 
 ## Verify with MCP Inspector
 
 ```bash
 # In a separate terminal (requires Node.js)
-npx @modelcontextprotocol/inspector http://localhost:8081/sse
+npx @modelcontextprotocol/inspector http://localhost:8091/sse
 ```
 
 This opens a web UI where you can browse and test all tools, resources, and prompts.
@@ -80,8 +80,8 @@ The MCP server shares the same `.env` as the main engine:
 |----------|---------|
 | `AZURE_AI_FOUNDRY_ENDPOINT` | Azure AI Foundry endpoint URL |
 | `AZURE_AI_FOUNDRY_KEY` | API key |
-| `AZURE_AI_FOUNDRY_CHAT_MODEL` | Chat deployment (e.g., `gpt-4-1-mini`) |
-| `AZURE_AI_FOUNDRY_EMBEDDING_MODEL` | Embedding deployment (e.g., `text-embedding-3-large`) |
+| `AZURE_AI_FOUNDRY_CHAT_MODEL` | Chat deployment (e.g., `gpt-5.4-1`) |
+| `AZURE_AI_FOUNDRY_EMBEDDING_MODEL` | Embedding deployment (e.g., `text-embedding-ada-002-1`) |
 
 ## Troubleshooting
 
@@ -89,12 +89,12 @@ The MCP server shares the same `.env` as the main engine:
 
 - Check `.env` exists and has valid credentials.
 - Ensure `uv sync` has been run.
-- Check port 8081 is not held by another process (server auto-kills it, but check).
+- Check port 8091 is not held by another process (server auto-kills it, but check).
 
 ### Inspector cannot connect
 
-- Verify `http://localhost:8081/sse` is reachable (open in browser, should show SSE stream).
-- Ensure you passed the full SSE URL to the inspector: `http://localhost:8081/sse`.
+- Verify `http://localhost:8091/sse` is reachable (open in browser, should show SSE stream).
+- Ensure you passed the full SSE URL to the inspector: `http://localhost:8091/sse`.
 
 ### Tools fail with errors
 

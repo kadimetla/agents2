@@ -10,9 +10,9 @@
 
 The active MCP server lives in `contoso-hr-agent/src/contoso_hr/mcp_server/server.py`.
 
-**Transport:** SSE (Server-Sent Events) at `http://localhost:8081/sse`
+**Transport:** SSE (Server-Sent Events) at `http://localhost:8091/sse`
 **Framework:** FastMCP 2
-**Port:** 8081 (force-killed on startup)
+**Port:** 8091 (force-killed on startup)
 **Start command:** `uv run hr-mcp`
 
 ### Tools (4)
@@ -47,7 +47,7 @@ The active MCP server lives in `contoso-hr-agent/src/contoso_hr/mcp_server/serve
 uv run hr-mcp
 
 # In another terminal, launch Inspector (requires Node.js)
-npx @modelcontextprotocol/inspector http://localhost:8081/sse
+npx @modelcontextprotocol/inspector http://localhost:8091/sse
 ```
 
 The Inspector opens a web UI where you can browse and call all tools, resources, and prompts interactively.

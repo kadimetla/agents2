@@ -4,7 +4,7 @@
 
 > **Historical note:** This file previously documented the MCP Inspector workflow for
 > `oreilly-agent-mvp/` (stdio transport, issue-triage tools). All content below targets
-> `contoso-hr-agent/` with FastMCP 2 over SSE on port 8081.
+> `contoso-hr-agent/` with FastMCP 2 over SSE on port 8091.
 
 ---
 
@@ -20,7 +20,7 @@ MCP Inspector is an interactive web UI for testing and debugging MCP servers. It
 ## Prerequisites
 
 - **Node.js** installed (for `npx`)
-- **MCP server running** on port 8081: `uv run hr-mcp`
+- **MCP server running** on port 8091: `uv run hr-mcp`
 
 ## Starting MCP Inspector
 
@@ -30,10 +30,10 @@ cd contoso-hr-agent
 uv run hr-mcp
 
 # Terminal 2: Launch Inspector pointing at the SSE endpoint
-npx @modelcontextprotocol/inspector http://localhost:8081/sse
+npx @modelcontextprotocol/inspector http://localhost:8091/sse
 ```
 
-The Inspector opens in your browser (typically at `http://localhost:5173`).
+The Inspector opens in your browser (typically at `http://localhost:6374`).
 
 ## Using the Inspector
 
@@ -121,17 +121,17 @@ Install Node.js from https://nodejs.org/ and retry.
 
 ### Port already in use
 
-The MCP server calls `force_kill_port(8081)` on startup. If port 5173 (Inspector UI)
+The MCP server calls `force_kill_port(8091)` on startup. If port 5273 (Inspector UI)
 is in use, kill the process or use a different port:
 
 ```bash
-npx @modelcontextprotocol/inspector --port 6173 http://localhost:8081/sse
+npx @modelcontextprotocol/inspector --port 6173 http://localhost:8091/sse
 ```
 
 ### Tools do not appear
 
 - Check that `uv run hr-mcp` is running without errors.
-- Verify `http://localhost:8081/sse` is reachable in a browser (should show SSE stream).
+- Verify `http://localhost:8091/sse` is reachable in a browser (should show SSE stream).
 - Check `.env` has the required Azure AI Foundry credentials.
 
 ### Tool execution fails

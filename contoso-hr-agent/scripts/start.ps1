@@ -1,27 +1,40 @@
 # Contoso HR Agent — Start (Windows)
-# Starts the file watcher, MCP Inspector (stdio), and the FastAPI engine in the foreground.
-# The engine kills port 8080 automatically on startup.
+# One-command startup: kills all four project ports, launches watcher + MCP
+# Inspector + engine, and auto-opens chat + Inspector in separate browser tabs.
+# Press Ctrl+C in this window to stop everything.
 
 Set-StrictMode -Version Latest
 
+# Ports the project owns (engine, MCP SSE, Inspector proxy, Inspector UI)
+$PROJECT_PORTS = @(8090, 8091, 5273, 6374)
+
 Write-Host "`n=== Starting Contoso HR Agent ===" -ForegroundColor Cyan
-Write-Host "  Web UI: http://localhost:8080/chat.html" -ForegroundColor White
-Write-Host "  API:    http://localhost:8080/api/" -ForegroundColor White
+Write-Host "  Web UI:        http://localhost:8090/chat.html" -ForegroundColor White
+Write-Host "  API:           http://localhost:8090/api/" -ForegroundColor White
+Write-Host "  MCP SSE:       http://localhost:8091/sse"     -ForegroundColor White
+Write-Host "  MCP Inspector: http://localhost:6374"          -ForegroundColor White
 Write-Host "  Press Ctrl+C to stop`n" -ForegroundColor White
 
-# Kill any leftover MCP Inspector proxy port (5173 / 6274)
-foreach ($port in @(5173, 6274)) {
-    $netstatOutput = netstat -ano 2>$null | Select-String ":$port"
-    foreach ($line in $netstatOutput) {
-        $parts = $line.ToString().Trim() -split '\s+'
-        $procId = $parts[-1]
-        if ($procId -match '^\d+$' -and $procId -ne '0') {
-            Write-Host "  Killing PID $procId on port $port" -ForegroundColor Yellow
-            try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch {}
-            taskkill /PID $procId /F 2>$null | Out-Null
+# Belt-and-suspenders: kill anything on our ports before binding.
+# (engine.py and mcp_server/__main__.py also call force_kill_port() internally.)
+function Clear-ProjectPorts {
+    param([int[]]$Ports)
+    foreach ($port in $Ports) {
+        $netstatOutput = netstat -ano 2>$null | Select-String ":$port\s"
+        foreach ($line in $netstatOutput) {
+            $parts = $line.ToString().Trim() -split '\s+'
+            $procId = $parts[-1]
+            if ($procId -match '^\d+$' -and $procId -ne '0') {
+                Write-Host "  Killing PID $procId on port $port" -ForegroundColor Yellow
+                try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch {}
+                taskkill /PID $procId /F 2>$null | Out-Null
+            }
         }
     }
 }
+
+Clear-ProjectPorts -Ports $PROJECT_PORTS
+Start-Sleep -Milliseconds 500
 
 # Start watcher as background job
 $watcherJob = Start-Job -ScriptBlock {
@@ -30,22 +43,30 @@ $watcherJob = Start-Job -ScriptBlock {
 }
 Write-Host "[watcher] Started (Job ID: $($watcherJob.Id))" -ForegroundColor Green
 
-# Start MCP Inspector (stdio) as background job if npx is available
+# Start MCP Inspector (stdio) as background job if npx is available.
+# SERVER_PORT=Inspector proxy, CLIENT_PORT=Inspector browser UI.
 $mcpJob = $null
 if (Get-Command npx -ErrorAction SilentlyContinue) {
     $mcpJob = Start-Job -ScriptBlock {
         Set-Location $using:PWD
+        $env:SERVER_PORT = "5273"
+        $env:CLIENT_PORT = "6374"
         npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
     }
-    Write-Host "[mcp-inspector] Started (Job ID: $($mcpJob.Id))" -ForegroundColor Green
+    Write-Host "[mcp-inspector] Started (Job ID: $($mcpJob.Id)) — UI: http://localhost:6374" -ForegroundColor Green
 } else {
     Write-Host "[mcp-inspector] Skipped — npx not found (install Node.js to enable)" -ForegroundColor Yellow
 }
 
-# Open browser after a short delay
+# Open both tabs after services have time to bind.
+# Engine binds in ~3s; Inspector takes ~8-12s on first npx run (cached after).
 Start-Job -ScriptBlock {
-    Start-Sleep 3
-    Start-Process "http://localhost:8080/chat.html"
+    Start-Sleep 4
+    Start-Process "http://localhost:8090/chat.html"
+    if ($using:mcpJob) {
+        Start-Sleep 12
+        Start-Process "http://localhost:6374"
+    }
 } | Out-Null
 
 # Start engine (foreground — blocks until Ctrl+C)
@@ -59,4 +80,7 @@ try {
         Stop-Job $mcpJob -ErrorAction SilentlyContinue
         Remove-Job $mcpJob -ErrorAction SilentlyContinue
     }
+    # On graceful exit, sweep ports again so the next bounce is instant.
+    Clear-ProjectPorts -Ports $PROJECT_PORTS
+    Write-Host "All stopped. Ports cleared." -ForegroundColor Green
 }

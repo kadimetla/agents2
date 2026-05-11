@@ -17,7 +17,7 @@
       "command": "uv",
       "args": ["run", "hr-mcp"],
       "cwd": ".",
-      "comment": "Contoso HR Agent MCP server (FastMCP 2, SSE on port 8081)"
+      "comment": "Contoso HR Agent MCP server (FastMCP 2, SSE on port 8091)"
     }
   }
 }

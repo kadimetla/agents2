@@ -100,13 +100,13 @@ uv run pytest --cov=contoso_hr
 uv run ruff check src/ tests/
 uv run ruff format src/ tests/
 
-# Run the HR engine (port 8080)
+# Run the HR engine (port 8090)
 uv run hr-engine
 
 # Run the folder watcher
 uv run hr-watcher
 
-# Run the MCP server (port 8081)
+# Run the MCP server (port 8091)
 uv run hr-mcp
 
 # Re-seed the knowledge base
@@ -177,7 +177,7 @@ contoso-hr-agent/src/contoso_hr/
 +-- pipeline/             # LangGraph StateGraph + CrewAI agents (parallel pipeline)
 +-- knowledge/            # ChromaDB vectorizer and retriever
 +-- memory/               # SQLite store and LangGraph checkpoints
-+-- mcp_server/           # FastMCP 2 server (SSE on port 8081)
++-- mcp_server/           # FastMCP 2 server (SSE on port 8091)
 +-- watcher/              # Folder watcher for event-driven processing
 +-- util/                 # Port utilities
 ```

@@ -31,23 +31,41 @@ Copy `.env.example` to `.env` and set your Azure AI Foundry credentials:
 ## Build / Run Commands
 
 ```bash
-# Start everything (engine + watcher + MCP Inspector)
-./scripts/start.sh          # Linux/macOS
-.\scripts\start.ps1         # Windows PowerShell (also launches MCP Inspector on ports 5173/6274)
+# One-command lifecycle — kills all 4 project ports first, then starts everything
+# and auto-opens TWO browser tabs (chat + MCP Inspector). Press Ctrl+C to stop cleanly.
+.\scripts\start.ps1         # Windows: watcher + Inspector + engine, opens chat + Inspector tabs
+./scripts/start.sh          # Linux/macOS: same behavior
 
-# Start individual services
-uv run hr-engine            # FastAPI on port 8080 (kills port first)
+# Crash-recovery / nuclear stop — safe to run anytime. Kills anything on the
+# four project ports (8090, 8091, 5273, 6374), even orphaned processes from
+# a crashed start script.
+.\scripts\stop.ps1
+./scripts/stop.sh
+
+# Bounce: just Ctrl+C in the start window (the finally block clears ports),
+# then re-run start. Or stop.ps1 + start.ps1 from another window.
+
+# Individual services (rarely needed)
+uv run hr-engine            # FastAPI on port 8090 (kills port first)
 uv run hr-watcher           # File watcher for data/incoming/
-uv run hr-mcp               # FastMCP 2 server, SSE on port 8081 (kills port first)
-uv run hr-mcp --stdio       # FastMCP 2 server, stdio transport (for MCP Inspector)
+uv run hr-mcp               # FastMCP 2 SSE on port 8091 (kills port first)
+uv run hr-mcp --stdio       # FastMCP 2 stdio transport (for MCP Inspector)
 uv run hr-seed              # Re-seed ChromaDB from sample_knowledge/
+uv run hr-seed --reset      # Clear ChromaDB and re-seed from scratch
 
-# MCP Inspector standalone (requires Node.js) — not needed if using start.ps1
-npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
-.\scripts\start_mcp.ps1     # Windows convenience wrapper
+# Smoke test (one-shot end-to-end pipeline run, ~50s)
+uv run python smoke_test.py # Drops Alice Zhang resume, asserts Strong Match
 ```
 
-Engine startup prints four URIs: Web UI (8080), API, Docs, MCP SSE (8081).
+Engine startup prints four URIs: Web UI (8090), API, Docs, MCP SSE (8091).
+
+**Port map** (chosen to vacate 8080 + 5173 used by another project on this machine):
+| Port | Service |
+|------|---------|
+| 8090 | FastAPI engine (web UI + REST API) |
+| 8091 | FastMCP 2 SSE server (only when running `hr-mcp` directly) |
+| 5273 | MCP Inspector proxy (env var `SERVER_PORT`) |
+| 6374 | MCP Inspector browser UI (env var `CLIENT_PORT`) |
 
 ## Test & Lint
 
@@ -63,7 +81,7 @@ uv run ruff format src/ tests/      # Format (line length 100)
 
 ### Stack
 
-LangGraph + CrewAI + FastMCP 2 + Azure AI Foundry (gpt-4-1-mini + text-embedding-3-large) + ChromaDB (146 chunks, 8 docs) + SQLite + Brave Search API
+LangGraph + CrewAI + FastMCP 2 + Azure AI Foundry (`gpt-5.4-1` chat + `text-embedding-ada-002-1` embedding deployments on `scribe-foundry-resource`) + ChromaDB (146 chunks, 8 docs) + SQLite + Brave Search API
 
 ### Repository Overview
 
@@ -79,7 +97,7 @@ flowchart TD
             WATCHER["watcher/<br/>resume_watcher.py  process_resume.py"]
             MEMORY["memory/<br/>sqlite_store.py  checkpoints.py"]
             MCP["mcp_server/<br/>server.py"]
-            ENGINE["engine.py<br/>FastAPI :8080"]
+            ENGINE["engine.py<br/>FastAPI :8090"]
             WEB["web/<br/>chat.html  candidates.html  runs.html"]
         end
         LEGACY["oreilly-agent-mvp/<br/>LEGACY reference"]
@@ -88,7 +106,7 @@ flowchart TD
         style DOCS fill:#F3F2F1,color:#767676,stroke:#767676
     end
 
-    AZURE["Azure AI Foundry<br/>gpt-4-1-mini + text-embedding-3-large"]
+    AZURE["Azure AI Foundry<br/>gpt-5.4-1 + text-embedding-ada-002-1"]
     style AZURE fill:#50B0F0,color:#004E8C,stroke:#004E8C
     CHROMADB[("ChromaDB<br/>146 chunks, 8 docs")]
     style CHROMADB fill:#107C10,color:#FFFFFF,stroke:#107C10
@@ -182,7 +200,7 @@ All three pages are linked in the navigation bar: **Chat | Candidates | Pipeline
 | `src/contoso_hr/memory/checkpoints.py` | `get_checkpointer()`, `make_thread_config(session_id)` |
 | `src/contoso_hr/engine.py` | FastAPI: all API endpoints, `_build_past_session_context()`, startup URI prints |
 | `src/contoso_hr/watcher/resume_watcher.py` | Polls data/incoming/ for .txt/.md files |
-| `src/contoso_hr/mcp_server/server.py` | FastMCP 2 server -- all 5 MCP primitives (SSE :8081 or stdio) |
+| `src/contoso_hr/mcp_server/server.py` | FastMCP 2 server -- all 5 MCP primitives (SSE :8091 or stdio) |
 | `src/contoso_hr/util/port_utils.py` | `force_kill_port(port)` -- called on every startup |
 
 ### Data Model Chain
@@ -203,11 +221,17 @@ Required env vars: `AZURE_AI_FOUNDRY_ENDPOINT`, `AZURE_AI_FOUNDRY_KEY`, `AZURE_A
 
 ### Port Management
 
-`force_kill_port(port)` in `util/port_utils.py` is called at the top of `engine.py:main()` and `mcp_server/__main__.py:main()`. Scripts also kill ports as belt-and-suspenders. Always uses port 8080 (engine) and 8081 (MCP).
+`force_kill_port(port)` in `util/port_utils.py` is called at the top of `engine.py:main()` and `mcp_server/__main__.py:main()` (SSE branch only — see stdio gotcha below). Scripts also kill ports as belt-and-suspenders. Always uses port 8090 (engine) and 8091 (MCP SSE).
+
+### MCP stdio mode — DO NOT write to stdout
+
+`mcp_server/__main__.py` has two branches:
+- **SSE mode** (`uv run hr-mcp`): calls `setup_logging()` + `force_kill_port(8091)` + Rich console banner. All fine — uses stdout freely.
+- **stdio mode** (`uv run hr-mcp --stdio`, used by MCP Inspector): JSON-RPC owns stdout. ANY non-JSON byte on stdout (Rich logs, `print()`, banners) corrupts the protocol and the Inspector throws `SyntaxError: Unexpected number in JSON at position 2`. The stdio branch routes **all logging to stderr** via a separate `Console(stderr=True)`. If you add new logging or `print()` calls anywhere in the import chain reachable from stdio mode, ensure they go to stderr.
 
 ### MCP Server (FastMCP 2)
 
-Supports SSE transport (`http://localhost:8081/sse`) and stdio (`uv run hr-mcp --stdio`). Implements all five MCP primitives:
+Supports SSE transport (`http://localhost:8091/sse`) and stdio (`uv run hr-mcp --stdio`). Implements all five MCP primitives:
 
 **Tools:** `get_candidate`, `list_candidates`, `trigger_resume_evaluation`, `query_policy`, `generate_eval_summary` (sampling -- asks the connected LLM to write an executive summary), `confirm_and_evaluate` (elicitation -- prompts the user to confirm before running the pipeline).
 

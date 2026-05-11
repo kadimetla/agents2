@@ -14,6 +14,8 @@ Pattern mirrors oreilly-agent-mvp/crew_variant/agents.py:
 
 from __future__ import annotations
 
+import os
+
 from crewai import Agent, LLM
 
 from .prompts import (
@@ -23,6 +25,12 @@ from .prompts import (
     RESUME_ANALYST_SYSTEM_PROMPT,
 )
 from .tools import get_policy_expert_tools, get_resume_analyst_tools
+
+# CrewAI verbose=True writes to stdout via its own Rich console. When the
+# MCP server runs in stdio transport, stdout is the JSON-RPC channel — any
+# non-JSON byte corrupts the protocol. mcp_server/__main__.py sets this
+# env var BEFORE importing the pipeline so verbose stays off in stdio mode.
+_VERBOSE = os.getenv("CONTOSO_HR_MCP_STDIO") != "1"
 
 
 class ChatConciergeAgent:
@@ -81,7 +89,7 @@ class PolicyExpertAgent:
             backstory=cls.BACKSTORY,
             llm=llm,
             tools=get_policy_expert_tools(),
-            verbose=True,
+            verbose=_VERBOSE,
             allow_delegation=False,
         )
 
@@ -106,7 +114,7 @@ class ResumeAnalystAgent:
             backstory=cls.BACKSTORY,
             llm=llm,
             tools=get_resume_analyst_tools(),
-            verbose=True,
+            verbose=_VERBOSE,
             allow_delegation=False,
         )
 
@@ -131,6 +139,6 @@ class DecisionMakerAgent:
             backstory=cls.BACKSTORY,
             llm=llm,
             tools=[],
-            verbose=True,
+            verbose=_VERBOSE,
             allow_delegation=False,
         )

@@ -76,13 +76,13 @@ The following secrets are configured in `.env` (see `.env.example`):
 ### ChromaDB Knowledge Base
 
 - Policy documents in `sample_knowledge/` are embedded and stored in `data/chroma/`
-- Embeddings are generated via Azure AI Foundry (text-embedding-3-large)
+- Embeddings are generated via Azure AI Foundry (text-embedding-ada-002-1)
 - The ChromaDB data directory is local and gitignored
 
 ### Port Exposure
 
-- The HR engine runs on port 8080 (localhost by default)
-- The MCP server runs on port 8081/sse (localhost by default)
+- The HR engine runs on port 8090 (localhost by default)
+- The MCP server runs on port 8091/sse (localhost by default)
 - Both use `force_kill_port()` on startup to clear conflicting processes
 - Do not expose these ports to the public internet without proper authentication
 

@@ -12,11 +12,11 @@ assignees: ''
 ## Which Component?
 <!-- Check the area affected -->
 
-- [ ] HR Engine (FastAPI on port 8080)
+- [ ] HR Engine (FastAPI on port 8090)
 - [ ] Pipeline (LangGraph / CrewAI agents)
 - [ ] Chat Concierge (Alex)
 - [ ] Web UI (chat.html / candidates.html / runs.html)
-- [ ] MCP Server (FastMCP 2 on port 8081)
+- [ ] MCP Server (FastMCP 2 on port 8091)
 - [ ] Knowledge Base (ChromaDB / vectorizer / retriever)
 - [ ] Folder Watcher
 - [ ] Tests
@@ -73,7 +73,7 @@ Paste error here
 
 **LLM Provider:**
 
-- [ ] Azure AI Foundry (primary -- gpt-4-1-mini)
+- [ ] Azure AI Foundry (primary -- gpt-5.4-1)
 - [ ] Other (specify: )
 
 **Project Version:**

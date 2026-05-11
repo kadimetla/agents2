@@ -16,12 +16,18 @@ from ..models import AgentTokens, PipelineTokens, TokenUsage
 # NOTE: More specific model names must come BEFORE generic ones.
 PRICING: dict[str, dict[str, float]] = {
     # Azure AI Foundry / OpenAI
+    # gpt-5.4 rates are placeholders (~2x gpt-4o); not Microsoft-published.
+    # Verify against the Azure pricing blade before using for live cost demos.
+    "gpt-5.4": {"input": 1.25, "output": 5.00},
+    "gpt-5.4-1": {"input": 1.25, "output": 5.00},
     "gpt-4o-mini": {"input": 0.15, "output": 0.60},
     "gpt-4o": {"input": 2.50, "output": 10.00},
     "gpt-4-turbo": {"input": 10.00, "output": 30.00},
     "gpt-4": {"input": 30.00, "output": 60.00},
     "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
     # Text embeddings (input only, no output tokens)
+    "text-embedding-ada-002": {"input": 0.10, "output": 0.00},
+    "text-embedding-ada-002-1": {"input": 0.10, "output": 0.00},
     "text-embedding-3-large": {"input": 0.13, "output": 0.00},
     "text-embedding-3-small": {"input": 0.02, "output": 0.00},
     # Anthropic (for reference)

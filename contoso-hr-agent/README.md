@@ -34,10 +34,10 @@ An O'Reilly training demo showing production AI agent patterns through a realist
 Copy `.env.example` to `.env` and fill in your credentials:
 
 ```bash
-AZURE_AI_FOUNDRY_ENDPOINT=https://contoso-hr-ai.cognitiveservices.azure.com/
+AZURE_AI_FOUNDRY_ENDPOINT=https://scribe-foundry-resource.cognitiveservices.azure.com/
 AZURE_AI_FOUNDRY_KEY=your-api-key
-AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-4-1-mini
-AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-large
+AZURE_AI_FOUNDRY_CHAT_MODEL=gpt-5.4-1
+AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-ada-002-1
 AZURE_AI_FOUNDRY_API_VERSION=2024-05-01-preview
 BRAVE_API_KEY=your-brave-search-api-key       # free tier at brave.com/search/api
 ```
@@ -48,23 +48,34 @@ Seed the knowledge base:
 uv run hr-seed --reset   # clears ChromaDB and re-ingests all policy docs (8 docs, 146 chunks)
 ```
 
-### Start
+### Start, Stop, Bounce
+
+One command turns the whole stack on. Force-kills the four project ports first
+(8090 engine, 8091 MCP SSE, 5273 Inspector proxy, 6374 Inspector UI), starts
+the watcher + MCP Inspector + engine, and auto-opens **two browser tabs** —
+the chat UI and the MCP Inspector.
 
 ```bash
 # Windows
-.\scripts\start.ps1
+.\scripts\start.ps1     # start everything + open both tabs
+.\scripts\stop.ps1      # kill everything (safe to run anytime)
 
 # Linux/macOS
 ./scripts/start.sh
+./scripts/stop.sh
 ```
+
+**Bounce** = stop, then start. From an interactive session, just press **Ctrl+C**
+in the start window — the script's cleanup handler kills every child process and
+clears the ports, ready for the next start. If something orphaned a process
+(crashed shell, killed terminal), `stop.ps1` is the recovery hatch.
 
 The engine prints startup URIs:
 
-- **Web UI:** <http://localhost:8080/chat.html>
-- **API:** <http://localhost:8080/api>
-- **Docs:** <http://localhost:8080/docs>
-
-On Windows, `start.ps1` also launches the **MCP Inspector** as a background job (stdio transport via `npx @modelcontextprotocol/inspector uv run hr-mcp --stdio`). If Node.js is not installed, the Inspector is skipped with a warning. The script kills any leftover Inspector ports (5173/6274) on startup.
+- **Web UI:** <http://localhost:8090/chat.html>
+- **API:** <http://localhost:8090/api>
+- **Docs:** <http://localhost:8090/docs>
+- **MCP Inspector:** <http://localhost:6374>
 
 Open the Web UI in your browser. A nav bar across all pages links to **Chat**, **Candidates**, and **Pipeline Runs**.
 
@@ -180,7 +191,7 @@ sequenceDiagram
 
 ### 1. Chat with the HR Assistant
 
-Open `http://localhost:8080/chat.html` and ask policy questions:
+Open `http://localhost:8090/chat.html` and ask policy questions:
 
 - "What is Contoso's EEO policy?"
 - "What is the salary band for a Level 3 trainer?"
@@ -203,11 +214,11 @@ Alternatively, drop any `.txt`, `.md`, `.pdf`, or `.docx` file directly into `da
 
 ### 3. View Candidate Results
 
-Open `http://localhost:8080/candidates.html` -- auto-refreshes every 10 seconds. Click any card for the full evaluation detail including scores, strengths, red flags, reasoning, and next steps.
+Open `http://localhost:8090/candidates.html` -- auto-refreshes every 10 seconds. Click any card for the full evaluation detail including scores, strengths, red flags, reasoning, and next steps.
 
 ### 4. View Pipeline Runs
 
-Open `http://localhost:8080/runs.html` -- the Pipeline Trace viewer. Split-panel layout: the left panel lists all pipeline runs, and the right panel shows a visual trace for the selected run. Parallel branches (policy_expert and resume_analyst) appear side-by-side with a "parallel fan-out" label.
+Open `http://localhost:8090/runs.html` -- the Pipeline Trace viewer. Split-panel layout: the left panel lists all pipeline runs, and the right panel shows a visual trace for the selected run. Parallel branches (policy_expert and resume_analyst) appear side-by-side with a "parallel fan-out" label.
 
 ### 5. Observe Memory and Persistence
 
@@ -223,7 +234,7 @@ If you used `start.ps1`, the MCP Inspector is already running in the background 
 npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
 ```
 
-The Inspector UI opens at `http://localhost:6274`. Try:
+The Inspector UI opens at `http://localhost:6374`. Try:
 
 - **Tools:** `list_candidates` -- see all evaluations; `query_policy` with "What is the hiring process?"; `trigger_resume_evaluation` with resume text from a sample file
 - **Sampling:** `generate_eval_summary` -- the server calls `ctx.sample()` to have the connected LLM write an executive summary for a candidate
@@ -349,12 +360,12 @@ contoso-hr-agent/
 │   │   └── checkpoints.py     # LangGraph SqliteSaver wrapper
 │   ├── mcp_server/            # FastMCP 2 (stdio + SSE)
 │   │   ├── server.py          # All 5 MCP primitives (tools, resources, prompts, sampling, elicitation)
-│   │   └── __main__.py        # Entry point (--stdio flag for Inspector, else SSE on 8081)
+│   │   └── __main__.py        # Entry point (--stdio flag for Inspector, else SSE on 8091)
 │   ├── util/                  # Utilities
 │   │   ├── port_utils.py      # force_kill_port(port)
 │   │   ├── fs.py              # ensure_dirs()
 │   │   └── token_tracking.py  # Token usage tracking
-│   ├── engine.py              # FastAPI app (port 8080, serves web/ static files)
+│   ├── engine.py              # FastAPI app (port 8090, serves web/ static files)
 │   ├── config.py              # Config dataclass, Azure AI Foundry LLM/embeddings
 │   ├── models.py              # Pydantic v2 data contracts (full model chain)
 │   └── logging_setup.py       # Rich-based structured logging
@@ -409,29 +420,29 @@ The 13 `RESUME_*.txt` files in `sample_resumes/` cover three quality tiers for M
 
 | Setting | Value |
 |---------|-------|
-| Resource group | `contoso-hr-rg` |
-| Resource name | `contoso-hr-ai` |
-| Endpoint | `https://contoso-hr-ai.cognitiveservices.azure.com/` |
+| Resource group | `scribe-rg` |
+| Resource name | `scribe-foundry-resource` |
+| Endpoint | `https://scribe-foundry-resource.cognitiveservices.azure.com/` |
 | Region | `eastus2` |
-| Chat model | `gpt-4-1-mini` |
-| Embedding model | `text-embedding-3-large` |
+| Chat deployment | `gpt-5.4-1` (model `gpt-5.4`, version `2026-03-05`) |
+| Embedding deployment | `text-embedding-ada-002-1` (model `text-embedding-ada-002`) |
 | API version | `2024-05-01-preview` |
 
-Teardown when finished:
+Teardown when finished — substitute YOUR resource group, never run against shared infra:
 
 ```bash
-az group delete --name contoso-hr-rg --yes --no-wait
+az group delete --name <your-resource-group> --yes --no-wait
 ```
 
 ## MCP Server (FastMCP 2 -- All 5 Primitives)
 
-Supports two transports: **stdio** (primary for local dev with MCP Inspector) and **SSE** (port 8081, for programmatic clients).
+Supports two transports: **stdio** (primary for local dev with MCP Inspector) and **SSE** (port 8091, for programmatic clients).
 
 ```bash
 # stdio (recommended for Inspector -- auto-started by start.ps1)
 npx @modelcontextprotocol/inspector uv run hr-mcp --stdio
 
-# SSE (standalone, binds port 8081)
+# SSE (standalone, binds port 8091)
 uv run hr-mcp
 ```
 
