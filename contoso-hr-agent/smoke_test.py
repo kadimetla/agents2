@@ -61,11 +61,33 @@ print(f"Reasoning (first 200 chars): {result.hr_decision.reasoning[:200]}")
 EXPECTED_DISPOSITION = "Strong Match"
 MIN_OVERALL_SCORE = 80
 
+
+def banner(verdict: str, lines: list[tuple[str, str]]) -> None:
+    """Render a glance-verdict summary block. Width fixed at 62 for terminal fit."""
+    width = 62
+    bar = "=" * width
+    print(f"\n{bar}")
+    print(f"  SMOKE TEST: {verdict}")
+    for label, value in lines:
+        print(f"  {label:<14} {value}")
+    print(f"{bar}\n")
+
+
+common_lines = [
+    ("Fixture:", resume.name),
+    ("Candidate:", result.candidate_name),
+    ("Disposition:", f"{result.hr_decision.decision} (expected: {EXPECTED_DISPOSITION})"),
+    ("Score:", f"{result.hr_decision.overall_score} / {MIN_OVERALL_SCORE} floor"),
+    ("Skills:", str(result.candidate_eval.skills_match_score)),
+    ("Experience:", str(result.candidate_eval.experience_score)),
+    ("Elapsed:", f"{elapsed:.1f}s"),
+]
+
 if result.hr_decision.decision != EXPECTED_DISPOSITION:
-    print(f"\nFAIL: expected disposition {EXPECTED_DISPOSITION!r}, got {result.hr_decision.decision!r}")
+    banner("FAIL (exit 4 — disposition mismatch)", common_lines)
     sys.exit(4)
 if result.hr_decision.overall_score < MIN_OVERALL_SCORE:
-    print(f"\nFAIL: expected overall_score >= {MIN_OVERALL_SCORE}, got {result.hr_decision.overall_score}")
+    banner("FAIL (exit 5 — score below floor)", common_lines)
     sys.exit(5)
 
-print(f"\nPASS: {EXPECTED_DISPOSITION} with score {result.hr_decision.overall_score} >= {MIN_OVERALL_SCORE}")
+banner("PASS", common_lines)
