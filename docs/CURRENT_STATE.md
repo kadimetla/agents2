@@ -1,6 +1,6 @@
 # Contoso HR Agent -- Current State and Teaching Focus
 
-**Last Updated:** 2026-05-10
+**Last Updated:** 2026-05-12
 
 ## What Is Built
 
@@ -86,4 +86,26 @@ Rich, Pydantic v2 data validation, and environment-based configuration.
 | `contoso-hr-agent/` | **Active** | Primary teaching project |
 | `oreilly-agent-mvp/` | Legacy | Earlier demo (issue triage with PM/Dev/QA agents) |
 | `docs/` | Active | Technical documentation (this directory) |
+| `docs/_archive/` | Frozen | Pre-delivery research dumps, stale teaching guides, prior decks |
 | `images/` | Static | Course materials |
+| `scripts/` | Active | Build automation (deck rebuild, kicker retitling) |
+
+## Known Pre-existing Issues (filed for post-May-2026 cleanup)
+
+These were flagged by a security review on 2026-05-12 ahead of the docs cleanup
+commit. They are **pre-existing in the codebase, not introduced by recent
+changes**, and do not affect the localhost-only teaching workflow on a trusted
+network. File as follow-up stories after the 2026-05-13 delivery.
+
+- **HIGH:** `src/contoso_hr/engine.py` and `src/contoso_hr/mcp_server/__main__.py`
+  bind FastAPI / MCP SSE to `0.0.0.0`. Should be `127.0.0.1` (or env-driven with
+  `127.0.0.1` default). Combined with CORS `*` this exposes the API to any host
+  on the LAN.
+- **MEDIUM:** `/api/upload` has no file-size cap; LAN clients could fill the disk.
+  Add a `content-length` guard (e.g., reject above 5 MB) before reading the body.
+- **LOW:** CORS wildcard with all methods/headers in `engine.py`. Drops to INFO
+  once bind is fixed to `127.0.0.1`; for belt-and-suspenders, allow only
+  `http://127.0.0.1:8090` and `http://localhost:8090`.
+
+These are intentionally **not** blocking the docs/deck cleanup commit since the
+diff itself contains zero code changes to the network surface.

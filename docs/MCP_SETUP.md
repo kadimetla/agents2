@@ -114,6 +114,5 @@ The MCP server shares the same `.env` as the main engine:
 
 **Related Documentation:**
 
-- [MCP_QUICK_REF.md](MCP_QUICK_REF.md) -- quick reference
-- [MCP_INSPECTOR_GUIDE.md](MCP_INSPECTOR_GUIDE.md) -- Inspector usage
-- [MCP_IMPLEMENTATION_SUMMARY.md](MCP_IMPLEMENTATION_SUMMARY.md) -- implementation details
+- [MCP_INSPECTOR_GUIDE.md](MCP_INSPECTOR_GUIDE.md) -- click-by-click Inspector workflow
+- [../CLAUDE.md](../CLAUDE.md) -- canonical MCP server spec

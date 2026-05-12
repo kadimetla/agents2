@@ -144,7 +144,6 @@ npx @modelcontextprotocol/inspector --port 6173 http://localhost:8091/sse
 
 **Related Documentation:**
 
-- [MCP_SETUP.md](MCP_SETUP.md) -- setup guide
-- [MCP_QUICK_REF.md](MCP_QUICK_REF.md) -- quick reference
-- [MCP_IMPLEMENTATION_SUMMARY.md](MCP_IMPLEMENTATION_SUMMARY.md) -- implementation details
+- [MCP_SETUP.md](MCP_SETUP.md) -- Claude Desktop + VS Code integration
+- [../CLAUDE.md](../CLAUDE.md) -- canonical MCP server spec (5 primitives, 6 tools, stdio gotcha)
 - [Official MCP Inspector docs](https://modelcontextprotocol.io/docs/tools/inspector)
