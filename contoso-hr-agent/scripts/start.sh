@@ -45,15 +45,14 @@ else
     echo "[mcp-inspector] Skipped — npx not found (install Node.js to enable)"
 fi
 
-# Open both tabs after services have time to bind.
-# Engine binds in ~3s; Inspector takes ~8-12s on first npx run (cached after).
+# Open the chat tab after the engine binds (~3s).
+# DO NOT open the Inspector tab here — the Inspector CLI auto-opens its own
+# tab with the MCP_PROXY_AUTH_TOKEN pre-filled in the URL. A manually-opened
+# http://localhost:6374/ is missing that token and the proxy rejects it.
 open_url() {
     open "$1" 2>/dev/null || xdg-open "$1" 2>/dev/null || true
 }
 (sleep 4 && open_url "http://localhost:8090/chat.html") &
-if [ -n "$MCP_PID" ]; then
-    (sleep 12 && open_url "http://localhost:6374") &
-fi
 
 cleanup() {
     echo ""
@@ -63,6 +62,22 @@ cleanup() {
     clear_project_ports
 }
 trap cleanup EXIT INT TERM
+
+# Consolidated URI banner — last visible block before engine logs stream.
+# Scroll up one screen during a live session to find these.
+echo ""
+echo "=== Services starting · open these URIs ==="
+echo "  Web UI:        http://localhost:8090/chat.html"
+echo "  API:           http://localhost:8090/api/"
+echo "  API Docs:      http://localhost:8090/docs"
+echo "  MCP SSE:       http://localhost:8091/sse"
+if [ -n "$MCP_PID" ]; then
+    echo "  MCP Inspector: auto-opens with auth token (do NOT paste 6374 manually)"
+else
+    echo "  MCP Inspector: (disabled - npx not installed)"
+fi
+echo "==========================================="
+echo ""
 
 # Start engine (foreground)
 uv run hr-engine

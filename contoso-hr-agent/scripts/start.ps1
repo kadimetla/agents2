@@ -58,16 +58,28 @@ if (Get-Command npx -ErrorAction SilentlyContinue) {
     Write-Host "[mcp-inspector] Skipped — npx not found (install Node.js to enable)" -ForegroundColor Yellow
 }
 
-# Open both tabs after services have time to bind.
-# Engine binds in ~3s; Inspector takes ~8-12s on first npx run (cached after).
+# Open the chat tab after the engine binds (~3s).
+# DO NOT open the Inspector tab here — the Inspector CLI auto-opens its own
+# tab with the MCP_PROXY_AUTH_TOKEN pre-filled in the URL. A manually-opened
+# http://localhost:6374/ is missing that token and the proxy rejects it.
 Start-Job -ScriptBlock {
     Start-Sleep 4
     Start-Process "http://localhost:8090/chat.html"
-    if ($using:mcpJob) {
-        Start-Sleep 12
-        Start-Process "http://localhost:6374"
-    }
 } | Out-Null
+
+# Consolidated URI banner — last visible block before engine logs stream.
+# Scroll up one screen during a live session to find these.
+Write-Host "`n=== Services starting · open these URIs ===" -ForegroundColor Cyan
+Write-Host "  Web UI:        http://localhost:8090/chat.html" -ForegroundColor White
+Write-Host "  API:           http://localhost:8090/api/"      -ForegroundColor White
+Write-Host "  API Docs:      http://localhost:8090/docs"      -ForegroundColor White
+Write-Host "  MCP SSE:       http://localhost:8091/sse"       -ForegroundColor White
+if ($mcpJob) {
+    Write-Host "  MCP Inspector: auto-opens with auth token (do NOT paste 6374 manually)" -ForegroundColor White
+} else {
+    Write-Host "  MCP Inspector: (disabled - npx not installed)" -ForegroundColor DarkGray
+}
+Write-Host "===========================================`n" -ForegroundColor Cyan
 
 # Start engine (foreground — blocks until Ctrl+C)
 try {
