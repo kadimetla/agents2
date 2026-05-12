@@ -11,8 +11,7 @@ $PROJECT_PORTS = @(8090, 8091, 5273, 6374)
 Write-Host "`n=== Starting Contoso HR Agent ===" -ForegroundColor Cyan
 Write-Host "  Web UI:        http://localhost:8090/chat.html" -ForegroundColor White
 Write-Host "  API:           http://localhost:8090/api/" -ForegroundColor White
-Write-Host "  MCP SSE:       http://localhost:8091/sse"     -ForegroundColor White
-Write-Host "  MCP Inspector: http://localhost:6374"          -ForegroundColor White
+Write-Host "  MCP Inspector: auto-opens (or run scripts\show-inspector-url.ps1)" -ForegroundColor White
 Write-Host "  Press Ctrl+C to stop`n" -ForegroundColor White
 
 # Belt-and-suspenders: kill anything on our ports before binding.
@@ -73,9 +72,9 @@ Write-Host "`n=== Services starting · open these URIs ===" -ForegroundColor Cya
 Write-Host "  Web UI:        http://localhost:8090/chat.html" -ForegroundColor White
 Write-Host "  API:           http://localhost:8090/api/"      -ForegroundColor White
 Write-Host "  API Docs:      http://localhost:8090/docs"      -ForegroundColor White
-Write-Host "  MCP SSE:       http://localhost:8091/sse"       -ForegroundColor White
 if ($mcpJob) {
     Write-Host "  MCP Inspector: auto-opens with auth token (do NOT paste 6374 manually)" -ForegroundColor White
+    Write-Host "                 lost the tab? run scripts\show-inspector-url.ps1" -ForegroundColor DarkGray
 } else {
     Write-Host "  MCP Inspector: (disabled - npx not installed)" -ForegroundColor DarkGray
 }

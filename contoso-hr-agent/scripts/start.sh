@@ -10,8 +10,7 @@ echo ""
 echo "=== Starting Contoso HR Agent ==="
 echo "  Web UI:        http://localhost:8090/chat.html"
 echo "  API:           http://localhost:8090/api/"
-echo "  MCP SSE:       http://localhost:8091/sse"
-echo "  MCP Inspector: http://localhost:6374"
+echo "  MCP Inspector: auto-opens (or run scripts/show-inspector-url.sh)"
 echo "  Press Ctrl+C to stop"
 echo ""
 
@@ -70,9 +69,9 @@ echo "=== Services starting · open these URIs ==="
 echo "  Web UI:        http://localhost:8090/chat.html"
 echo "  API:           http://localhost:8090/api/"
 echo "  API Docs:      http://localhost:8090/docs"
-echo "  MCP SSE:       http://localhost:8091/sse"
 if [ -n "$MCP_PID" ]; then
     echo "  MCP Inspector: auto-opens with auth token (do NOT paste 6374 manually)"
+    echo "                 lost the tab? run scripts/show-inspector-url.sh"
 else
     echo "  MCP Inspector: (disabled - npx not installed)"
 fi
