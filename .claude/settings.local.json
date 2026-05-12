@@ -26,7 +26,10 @@
       "Bash(uv venv:*)",
       "Bash(netstat -ano)",
       "Read(//c/github/agents2/contoso-hr-agent/.venv/Lib/site-packages/fastmcp/**)",
-      "Bash(uv run python -c \":*)"
+      "Bash(uv run python -c \":*)",
+      "Read(//c/github/agents2/contoso-hr-agent/**)",
+      "Bash(.venv/Scripts/python.exe --version)",
+      "mcp__ms-learn__microsoft_docs_search"
     ]
   }
 }
